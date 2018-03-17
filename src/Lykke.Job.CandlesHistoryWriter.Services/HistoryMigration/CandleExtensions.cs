@@ -22,7 +22,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                 throw new InvalidOperationException($"It's impossible to extend a candle eith price type {self.PriceType} by another one with {newCandle.PriceType}");
 
             var selfIsOlder = self.LastUpdateTimestamp <= newCandle.LastUpdateTimestamp;
-
             return Candle.Create(
                 self.AssetPairId,
                 self.PriceType,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Common.Log;
@@ -71,7 +71,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 
             // Creating a blank health report
             _tradesMigrationHealthService.Prepare(_sqlQueryBatchSize, removeByDate);
-
             // If there is nothing to migrate, just return "success".
             if (!assetSearchTokens.Any())
             {
