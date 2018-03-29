@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using Lykke.Job.CandlesProducer.Contract;
 
+
 namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
 {
     public class CandlesFiltrationHealthReport
@@ -25,7 +26,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
         public TimeSpan? Duration => FinishTime == null
             ? DateTime.UtcNow - StartTime
             : FinishTime - StartTime;
-
 
         public string AssetPairId { get; }
         public double LimitLow { get; }

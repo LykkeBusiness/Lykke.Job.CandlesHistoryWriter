@@ -134,6 +134,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             catch (Exception ex)
             {
                 Health.Errors.Add($"{assetId} - {priceType}: {ex.Message}");
+
                 await _log.WriteErrorAsync(nameof(CandlesFiltrationManager), nameof(DoFiltrateAsync), ex);
             }
         }

@@ -23,8 +23,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
         private readonly ConcurrentDictionary<string, AssetPairCandlesHistoryRepository> _assetPairRepositories;
 
-        private Dictionary<string, string> _extremeCandlesContinuationTokens;
-
         public CandlesHistoryRepository(IHealthService healthService, ILog log, IReloadingManager<Dictionary<string, string>> assetConnectionStrings)
         {
             _healthService = healthService;
@@ -96,7 +94,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             try
             {
                 return 
-
                     // ReSharper disable once PossibleMultipleEnumeration
                     await repo.DeleteCandlesAsync(candlesToDelete, priceType);
             }
@@ -117,7 +114,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             {
 
                     // ReSharper disable once PossibleMultipleEnumeration
-
                     await repo.ReplaceCandlesAsync(candlesToReplace, priceType);
             }
             catch
