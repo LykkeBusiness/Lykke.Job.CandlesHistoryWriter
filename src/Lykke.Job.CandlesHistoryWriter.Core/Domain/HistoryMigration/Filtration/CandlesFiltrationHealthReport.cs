@@ -2,11 +2,11 @@
 using System.Collections.Concurrent;
 using Lykke.Job.CandlesProducer.Contract;
 
-
 namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
 {
     public class CandlesFiltrationHealthReport
     {
+
         public bool AnalyzeOnly { get; }
 
         private CandlesFiltrationState _state;
