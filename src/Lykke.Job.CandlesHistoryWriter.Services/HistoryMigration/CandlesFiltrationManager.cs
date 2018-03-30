@@ -74,6 +74,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             {
                 Health.State = CandlesFiltrationState.Finished;
 
+                _log.WriteInfo(nameof(CandlesFiltrationManager), nameof(Filtrate),
+                    $"Filtration for {request.AssetId} finished. Total amount of deleted Sec candles: {Health.DeletedCandlesCount.Values.Sum()}, " +
+                    $"total amount of replaced bigger candles: {Health.ReplacedCandlesCount.Values.Sum()}. Errors count: {Health.Errors.Count}.");
+            });
+
+
                 if (analyzeOnly)
                     _log.WriteInfo(nameof(CandlesFiltrationManager), nameof(Filtrate),
                         $"Filtration for {request.AssetPairId} finished: analyze only. Total amount of candles to delete: {Health.DeletedCandlesCount.Values.Sum()}, " +
