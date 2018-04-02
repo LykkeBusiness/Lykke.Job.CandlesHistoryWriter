@@ -151,6 +151,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
                         "No data to fetch.");
 
                 return result;
+
             }
             catch (Exception ex)
             {

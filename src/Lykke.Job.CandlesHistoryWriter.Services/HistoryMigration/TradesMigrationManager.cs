@@ -7,6 +7,7 @@ using Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Assets;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.HistoryMigration;
 
+
 namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 {
     [UsedImplicitly]
@@ -34,6 +35,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             _tradesMigrationService = tradesMigrationServicey ?? throw new ArgumentNullException(nameof(tradesMigrationServicey));
             _tradesMigrationHealthService = tradesMigrationHealthService ?? throw new ArgumentNullException(nameof(tradesMigrationHealthService));
             _log = log ?? throw new ArgumentNullException(nameof(log));
+
 
             _sqlQueryBatchSize = sqlQueryBatchSize;
 
@@ -86,7 +88,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             _tradesMigrationService.MigrateTradesCandlesAsync(removeByDate, assetSearchTokens); 
 
             return true;
-
         }
 
         private void ExtendStoredCandles(ref TradesCandleBatch current)
