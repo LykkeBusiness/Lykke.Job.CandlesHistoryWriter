@@ -52,11 +52,13 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                 return FiltrationLaunchResult.AlreadyInProgress;
 
             // And also we should check if the specified asset pair is enabled.
+
             var storedAssetPair = _assetPairsManager.TryGetEnabledPairAsync(request.AssetPairId).GetAwaiter().GetResult();
             if (storedAssetPair == null || !_candlesHistoryRepository.CanStoreAssetPair(request.AssetPairId))
                 return FiltrationLaunchResult.AssetPairNotSupported;
 
             var epsilon = Math.Pow(10, -storedAssetPair.Accuracy);
+
 
             _log.WriteInfo(nameof(CandlesFiltrationManager), nameof(Filtrate),
                 $"Starting candles with extreme price filtration for {request.AssetPairId}...");
@@ -68,15 +70,21 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             {
                 priceTypeTasks.Add(
                     DoFiltrateAsync(request.AssetPairId, request.LimitLow, request.LimitHigh, priceType, epsilon, analyzeOnly));
+
             }
 
             Task.WhenAll(priceTypeTasks.ToArray()).ContinueWith(t =>
             {
                 Health.State = CandlesFiltrationState.Finished;
 
-                _log.WriteInfo(nameof(CandlesFiltrationManager), nameof(Filtrate),
-                    $"Filtration for {request.AssetId} finished. Total amount of deleted Sec candles: {Health.DeletedCandlesCount.Values.Sum()}, " +
-                    $"total amount of replaced bigger candles: {Health.ReplacedCandlesCount.Values.Sum()}. Errors count: {Health.Errors.Count}.");
+                if (analyzeOnly)
+                    _log.WriteInfo(nameof(CandlesFiltrationManager), nameof(Filtrate),
+                        $"Filtration for {request.AssetPairId} finished: analyze only. Total amount of candles to delete: {Health.DeletedCandlesCount.Values.Sum()}, " +
+                        $"total amount of candles to replace: {Health.ReplacedCandlesCount.Values.Sum()}. Errors count: {Health.Errors.Count}.");
+                else
+                    _log.WriteInfo(nameof(CandlesFiltrationManager), nameof(Filtrate),
+                        $"Filtration for {request.AssetPairId} finished. Total amount of deleted Sec candles: {Health.DeletedCandlesCount.Values.Sum()}, " +
+                        $"total amount of replaced bigger candles: {Health.ReplacedCandlesCount.Values.Sum()}. Errors count: {Health.Errors.Count}.");
             });
 
 
@@ -89,6 +97,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                         $"Filtration for {request.AssetPairId} finished. Total amount of deleted Sec candles: {Health.DeletedCandlesCount.Values.Sum()}, " +
                         $"total amount of replaced bigger candles: {Health.ReplacedCandlesCount.Values.Sum()}. Errors count: {Health.Errors.Count}.");
             });
+
 
             return FiltrationLaunchResult.Started;
         }
@@ -142,6 +151,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                 Health.Errors.Add($"{assetId} - {priceType}: {ex.Message}");
 
                 await _log.WriteErrorAsync(nameof(CandlesFiltrationManager), nameof(DoFiltrateAsync), ex);
+                return;
             }
         }
     }
