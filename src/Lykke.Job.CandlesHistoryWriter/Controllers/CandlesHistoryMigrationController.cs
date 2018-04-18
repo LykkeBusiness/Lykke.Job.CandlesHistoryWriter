@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.HistoryMigration.HistoryProviders;
 using Lykke.Job.CandlesHistoryWriter.Models.Filtration;
@@ -100,7 +101,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Controllers
         /// </summary>
         [HttpPost]
         [Route("trades")]
-        public IActionResult MigrateTrades([FromBody] TradesMigrationRequestModel request)
+        public IActionResult MigrateTrades(bool preliminaryRemoval, DateTime? removeByDate, string[] assetPairIds)
         {
             if (request == null)
                 return BadRequest("The request data is corrupted - unable to deserialize.");

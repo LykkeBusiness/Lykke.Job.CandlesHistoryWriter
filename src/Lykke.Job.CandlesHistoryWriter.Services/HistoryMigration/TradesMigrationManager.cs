@@ -19,7 +19,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
         private readonly ILog _log;
 
         private readonly int _sqlQueryBatchSize;
-
         public bool MigrationEnabled { get; }
 
         public TradesMigrationManager(
@@ -38,7 +37,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 
 
             _sqlQueryBatchSize = sqlQueryBatchSize;
-
             MigrationEnabled = migrationEnabled;
         }
 
@@ -50,7 +48,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             // We should not run migration multiple times before the first attempt ends.
             if (!_tradesMigrationHealthService.CanStartMigration)
                 return false;
-            
+
             // First of all, we will check if we can store the requested asset pairs. Additionally, let's
             // generate asset search tokens for using it in TradesSqlHistoryRepository (which has no access
             // to AssetPairsManager).

@@ -18,6 +18,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
         private readonly string _sqlConnString;
         private readonly TimeSpan _sqlTimeout;
 
+
         private readonly ILog _log;
 
         private int StartingRowOffset { get; set; }
@@ -26,6 +27,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
         private string AssetPairId { get; }
         private string SearchToken { get; }
         private DateTime? MigrateByDate { get; }
+
 
         public TradesSqlHistoryRepository(
             string sqlConnString,
@@ -44,6 +46,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
             if (log == null)
                 throw new ArgumentNullException(nameof(log));
             _log = log.CreateComponentScope(nameof(TradesSqlHistoryRepository)) ?? throw new InvalidOperationException("Couldn't create a component scope for logging.");
+
 
             StartingRowOffset = 0; // Will read everything.
 
