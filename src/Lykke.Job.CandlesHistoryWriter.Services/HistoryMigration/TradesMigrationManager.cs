@@ -48,7 +48,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             // We should not run migration multiple times before the first attempt ends.
             if (!_tradesMigrationHealthService.CanStartMigration)
                 return false;
-
+            
             // First of all, we will check if we can store the requested asset pairs. Additionally, let's
             // generate asset search tokens for using it in TradesSqlHistoryRepository (which has no access
             // to AssetPairsManager).
@@ -71,6 +71,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 
             // Creating a blank health report
             _tradesMigrationHealthService.Prepare(_sqlQueryBatchSize, removeByDate);
+
             // If there is nothing to migrate, just return "success".
             if (!assetSearchTokens.Any())
             {

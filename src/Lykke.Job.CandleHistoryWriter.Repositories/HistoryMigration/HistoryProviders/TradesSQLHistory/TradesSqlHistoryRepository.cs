@@ -18,7 +18,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
         private readonly string _sqlConnString;
         private readonly TimeSpan _sqlTimeout;
 
-
         private readonly ILog _log;
 
         private int StartingRowOffset { get; set; }
@@ -27,7 +26,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
         private string AssetPairId { get; }
         private string SearchToken { get; }
         private DateTime? MigrateByDate { get; }
-
 
         public TradesSqlHistoryRepository(
             string sqlConnString,
@@ -49,6 +47,8 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
 
 
             StartingRowOffset = 0; // Will read everything.
+
+            StartingRowOffset = 0;
 
             AssetPairId = assetPairId;
             SearchToken = searchToken;
@@ -143,6 +143,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
                     else _gotTheLastBatch = true; // If we have got smaller amount of records than _sqlQueryBatchSize, this only means we have the last batch now.
 
                     await _log.WriteInfoAsync(nameof(GetNextBatchAsync),
+
                         $"Starting offset = {StartingRowOffset}, asset pair ID = {AssetPairId}",
                         $"Fetched {result.Count} rows successfully. First date is {result.First().DateTime:O}, last date is {result.Last().DateTime:O}");
 
@@ -184,6 +185,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
                 sqlParameters.Add(new SqlParameter("@MigrateByDate", MigrateByDate));
                 commandBld.Append(@"AND ""DateTime"" < @MigrateByDate ");
             }
+
 
             commandBld.Append(@"ORDER BY ""DateTime"", Id ASC ");
             commandBld.Append("OFFSET @StartingRowOffset ROWS FETCH NEXT @QueryBatchSize ROWS ONLY;");

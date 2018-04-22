@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.HistoryMigration.HistoryProviders;
@@ -117,6 +118,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Controllers
 
             // This method is sync but internally it starts a new task and returns
             var migrationStarted = _tradesMigrationManager.Migrate(request.TimestampUpperLimit, request.AssetPairIds);
+
 
             if (migrationStarted)
                 return Ok();
