@@ -40,6 +40,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             _tradesMigrationHealthService = tradesMigrationHealthService ?? throw new ArgumentNullException(nameof(tradesMigrationHealthService));
             _log = log ?? throw new ArgumentNullException(nameof(log));
 
+
             _sqlConnString = sqlConnString;
             _sqlQueryBatchSize = sqlQueryBatchSize;
             _sqlTimeout = sqlTimeout;

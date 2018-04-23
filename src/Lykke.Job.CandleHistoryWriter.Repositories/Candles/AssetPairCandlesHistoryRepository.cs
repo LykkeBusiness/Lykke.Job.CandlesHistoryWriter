@@ -219,7 +219,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
         #region Delete
 
-        
         #endregion
 
         #region Private

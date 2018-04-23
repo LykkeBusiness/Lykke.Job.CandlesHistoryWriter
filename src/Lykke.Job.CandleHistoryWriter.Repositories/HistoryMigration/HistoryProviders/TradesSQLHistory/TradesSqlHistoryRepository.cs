@@ -48,7 +48,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
 
             StartingRowOffset = 0; // Will read everything.
 
-            StartingRowOffset = 0;
+            StartingRowOffset = 0; // Will read everything.
 
             AssetPairId = assetPairId;
             SearchToken = searchToken;
@@ -61,6 +61,12 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
             // with empty result. Just return.
             if (_gotTheLastBatch)
                 return Array.Empty<TradeHistoryItem>();
+
+            // First of all: if the last obtained batch was smaller than usual batch size, it means,
+            // we have already reached the limit. We know that the new query will return empty result,
+            // thus, we do not actually need to execute it.
+            if (StartingRowOffset % _sqlQueryBatchSize > 0)
+                return result;
 
             try
             {
@@ -126,7 +132,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
                     // This will guarantee that we did not peek up some orders of the same trade on this iteration, and others
                     // on the next. On the next iteration we will read them again for the next batch. No temporary buffer, for
                     // it can't save any observable value of time. NOTE: if we have got less records than _sqlQueryBatchSize,
-                    // this means that we obtained the last (or the single) data pack, and there is no reason to delete "tail"
                     // trades.
 
                     if (result.Count == _sqlQueryBatchSize)
@@ -144,7 +149,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
 
                     await _log.WriteInfoAsync(nameof(GetNextBatchAsync),
 
-                        $"Starting offset = {StartingRowOffset}, asset pair ID = {AssetPairId}",
+                   $"Starting offset = {StartingRowOffset}, asset pair ID = {AssetPairId}",
                         $"Fetched {result.Count} rows successfully. First date is {result.First().DateTime:O}, last date is {result.Last().DateTime:O}");
 
                     StartingRowOffset += result.Count;
@@ -185,6 +190,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
                 sqlParameters.Add(new SqlParameter("@MigrateByDate", MigrateByDate));
                 commandBld.Append(@"AND ""DateTime"" < @MigrateByDate ");
             }
+
 
 
             commandBld.Append(@"ORDER BY ""DateTime"", Id ASC ");
