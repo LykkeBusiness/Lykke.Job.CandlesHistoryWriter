@@ -92,7 +92,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 
                         if (isStraight &&
                             item.Direction == TradeDirection.Buy &&
-                            similarTrades.Any(t => t.AssetToken == _reverseAssetToken))
+                            similarTrades.Any(t => t.OrderId == item.OppositeOrderId))
                             continue;
 
                         var truncatedDate = item.DateTime.TruncateTo(TimeInterval);
