@@ -62,10 +62,9 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryPro
             if (_gotTheLastBatch)
                 return Array.Empty<TradeHistoryItem>();
 
-            // First of all: if the last obtained batch was smaller than usual batch size, it means,
-            // we have already reached the limit. We know that the new query will return empty result,
-            // thus, we do not actually need to execute it.
-            if (StartingRowOffset % _sqlQueryBatchSize > 0)
+            // If we got the last batch in the previous iteration, there is no reason to execute one more query
+            // with empty result. Just return.
+            if (_gotTheLastBatch)
                 return result;
 
             try
