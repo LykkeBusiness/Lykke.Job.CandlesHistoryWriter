@@ -14,6 +14,5 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
         public ResourceMonitorSettings ResourceMonitor { get; set; }
         public HistoryCacheSettings HistoryCache { get; set; }
 
-
     }
 }

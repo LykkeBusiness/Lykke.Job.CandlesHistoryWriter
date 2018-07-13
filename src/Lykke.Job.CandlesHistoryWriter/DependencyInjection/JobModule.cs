@@ -11,7 +11,6 @@ using Lykke.HttpClientGenerator;
 using Lykke.Job.CandleHistoryWriter.Repositories.Candles;
 using Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryProviders.MeFeedHistory;
 using Lykke.Job.CandleHistoryWriter.Repositories.Snapshots;
-using Lykke.Job.CandlesHistoryWriter.Core.Domain;
 using Lykke.Service.Assets.Client;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.HistoryProviders.MeFeedHistory;
@@ -30,7 +29,6 @@ using Lykke.Job.CandlesHistoryWriter.Services.Settings;
 using Lykke.SettingsReader;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
-using Lykke.Logs.MsSql;
 
 namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 {
@@ -156,24 +154,10 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .SingleInstance()
                 .AutoActivate();
 
-            if (_settings.Db.StorageMode == StorageMode.SqlServer)
-            {
-                var connstrParameter = new NamedParameter("connectionString",
-                    _settings.Db.SqlConnectionString);
-
-                builder.RegisterType<LogMsSql>()
-                    .As<ILogMsSql>()
-                    .WithParameter(connstrParameter)
-                    .SingleInstance();
-             }
-            else if(_settings.Db.StorageMode == StorageMode.Azure)
-            {
-                builder.RegisterType<CandlesHistoryRepository>()
-                    .As<ICandlesHistoryRepository>()
-                    .WithParameter(TypedParameter.From(_candleHistoryAssetConnections))
-                    .SingleInstance();
-            }
-                
+            builder.RegisterType<CandlesHistoryRepository>()
+                .As<ICandlesHistoryRepository>()
+                .WithParameter(TypedParameter.From(_candleHistoryAssetConnections))
+                .SingleInstance();
 
             builder.RegisterType<StartupManager>()
                 .As<IStartupManager>()
