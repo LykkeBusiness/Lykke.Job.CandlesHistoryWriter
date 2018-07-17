@@ -15,5 +15,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
         public HistoryCacheSettings HistoryCache { get; set; }
         public string MtAssetServiceUrl { get; set; }
 
+
     }
 }
