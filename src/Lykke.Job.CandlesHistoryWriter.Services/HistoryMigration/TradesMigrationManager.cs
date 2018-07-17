@@ -86,6 +86,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             _tradesMigrationService.MigrateTradesCandlesAsync(removeByDate, assetSearchTokens); 
 
             return true;
+
         }
+
+
     }
 }
