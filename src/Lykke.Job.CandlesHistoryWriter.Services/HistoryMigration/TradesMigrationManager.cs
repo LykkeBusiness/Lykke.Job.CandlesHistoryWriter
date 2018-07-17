@@ -89,6 +89,25 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 
         }
 
+        private void ExtendStoredCandles(ref TradesCandleBatch current)
+        {
+            var storedCandles =
+                _candlesHistoryRepository.GetCandlesAsync(current.AssetId, current.TimeInterval, TradesCandleBatch.PriceType, current.MinTimeStamp,
+                    current.MaxTimeStamp.AddSeconds((int)current.TimeInterval)).GetAwaiter().GetResult().ToList();
+            if (!storedCandles.Any())
+                return;
 
+            for (int i = 0; i < current.CandlesCount; i++)
+            {
+                var timestamp = current.Candles.Values.ElementAt(i).Timestamp;
+                var stored = storedCandles.FirstOrDefault(s => s.Timestamp == timestamp);
+                if (stored != null)
+                {
+                    current.Candles[timestamp.ToFileTimeUtc()] =
+                        stored.ExtendBy(current.Candles[timestamp.ToFileTimeUtc()]);
+                    storedCandles.Remove(stored);
+                }
+            }
+        }
     }
 }

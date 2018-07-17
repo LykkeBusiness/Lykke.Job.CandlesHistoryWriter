@@ -84,8 +84,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
         /// <param name="candleState">Candle state</param>
         public void InplaceMergeWith(ICandle candleState)
         {
-            if (LastUpdateTimestamp >= candleState.LastUpdateTimestamp 
-                && candleState.PriceType != CandlePriceType.Trades)
+            if (LastUpdateTimestamp >= candleState.LastUpdateTimestamp)
             {
                 return;
             }
