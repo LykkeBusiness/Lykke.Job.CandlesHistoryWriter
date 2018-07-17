@@ -26,6 +26,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
             ? DateTime.UtcNow - StartTime
             : FinishTime - StartTime;
 
+
         public string AssetPairId { get; }
         public double LimitLow { get; }
         public double LimitHigh { get; }
@@ -49,6 +50,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
             DeletedCandlesCount = new ConcurrentDictionary<CandlePriceType, int>();
             ReplacedCandlesCount = new ConcurrentDictionary<CandlePriceType, int>();
             Errors = new ConcurrentBag<string>();
+
         }
     }
 

@@ -150,6 +150,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
         public async Task<int> ReplaceCandlesAsync(IEnumerable<ICandle> candlesToReplace, CandlePriceType priceType)
         {
             // ReSharper disable once PossibleMultipleEnumeration
+
             if (candlesToReplace == null || !candlesToReplace.Any())
                 throw new ArgumentException("Candles set should not be empty.");
 
@@ -158,6 +159,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             // Splitting to chunks, just like in InsertOrMergeAsync
 
             // ReSharper disable once PossibleMultipleEnumeration
+
             var candleByRowsChunks = candlesToReplace
                 .GroupBy(candle => CandleHistoryEntity.GenerateRowKey(candle.Timestamp, _timeInterval))
                 .Batch(100);
@@ -173,6 +175,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
                 if (existingEntities.Count == 0) // Safety check
                     continue;
+
 
                 foreach (var entity in existingEntities)
                 {

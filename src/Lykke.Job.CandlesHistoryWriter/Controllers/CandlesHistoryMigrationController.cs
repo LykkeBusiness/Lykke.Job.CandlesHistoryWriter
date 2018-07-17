@@ -197,5 +197,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Controllers
         }
 
         #endregion
+
     }
 }

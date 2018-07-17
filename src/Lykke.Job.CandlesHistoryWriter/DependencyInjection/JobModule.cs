@@ -285,6 +285,13 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .SingleInstance();
         }
 
+        private void RegisterCandlesFiltration(ContainerBuilder builder)
+        {
+            builder.RegisterType<CandlesFiltrationManager>()
+                .AsSelf()
+                .SingleInstance();
+        }
+
         private static void RegisterHistoryProvider<TProvider>(ContainerBuilder builder) 
             where TProvider : IHistoryProvider
         {

@@ -1,4 +1,4 @@
-﻿using Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration;
+using Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration;
 using System.Collections.Generic;
 
 namespace Lykke.Job.CandlesHistoryWriter.Models.Filtration

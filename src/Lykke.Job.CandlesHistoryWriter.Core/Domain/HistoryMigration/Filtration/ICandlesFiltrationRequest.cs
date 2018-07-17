@@ -1,4 +1,4 @@
-﻿namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
+namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
 {
     public interface ICandlesFiltrationRequest
     {
