@@ -6,6 +6,8 @@ using AzureStorage.Blob;
 using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Common;
+using MarginTrading.SettingsService.Contracts;
+using Lykke.HttpClientGenerator;
 using Lykke.Job.CandleHistoryWriter.Repositories.Candles;
 using Lykke.Job.CandleHistoryWriter.Repositories.HistoryMigration.HistoryProviders.MeFeedHistory;
 using Lykke.Job.CandleHistoryWriter.Repositories.Snapshots;
@@ -81,24 +83,27 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
         private void RegisterResourceMonitor(ContainerBuilder builder)
         {
             var monitorSettings = _settings.ResourceMonitor;
-
-            switch (monitorSettings.MonitorMode)
+            if(!string.IsNullOrEmpty(Startup.monitoringServiceUrl) &&  Startup.monitoringServiceUrl != "n/a")
             {
-                case ResourceMonitorMode.Off:
-                    // Do not register any resource monitor.
-                    break;
+                switch (monitorSettings.MonitorMode)
+                {
+                    case ResourceMonitorMode.Off:
+                        // Do not register any resource monitor.
+                        break;
 
-                case ResourceMonitorMode.AppInsightsOnly:
-                    builder.RegisterResourcesMonitoring(_log);
-                    break;
+                    case ResourceMonitorMode.AppInsightsOnly:
+                        builder.RegisterResourcesMonitoring(_log);
+                        break;
 
-                case ResourceMonitorMode.AppInsightsWithLog:
-                    builder.RegisterResourcesMonitoringWithLogging(
-                        _log,
-                        monitorSettings.CpuThreshold,
-                        monitorSettings.RamThreshold);
-                    break;
+                    case ResourceMonitorMode.AppInsightsWithLog:
+                        builder.RegisterResourcesMonitoringWithLogging(
+                            _log,
+                            monitorSettings.CpuThreshold,
+                            monitorSettings.RamThreshold);
+                        break;
+                }
             }
+           
         }
 
         private void RegisterRedis(ContainerBuilder builder)
@@ -114,14 +119,28 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 
         private void RegisterAssets(ContainerBuilder builder)
         {
-            _services.RegisterAssetsClient(AssetServiceSettings.Create(
-                    new Uri(_assetSettings.ServiceUrl),
-                    _settings.AssetsCache.ExpirationPeriod),
-                _log);
+            if(_marketType == MarketType.Spot)
+            {
+                _services.RegisterAssetsClient(AssetServiceSettings.Create(
+                   new Uri(_assetSettings.ServiceUrl),
+                   _settings.AssetsCache.ExpirationPeriod),
+               _log);
 
-            builder.RegisterType<AssetPairsManager>()
-                .As<IAssetPairsManager>()
-                .SingleInstance();
+                builder.RegisterType<AssetPairsManager>()
+                   .As<IAssetPairsManager>()
+                   .SingleInstance();
+            }
+            else
+            {
+                builder.RegisterClient<IAssetPairsApi>(_assetSettings.ServiceUrl);
+
+                builder.RegisterType<MtAssetPairsManager>()
+                 .As<IAssetPairsManager>()
+                 .SingleInstance();
+            }
+
+         
+
         }
 
         private void RegisterCandles(ContainerBuilder builder)
@@ -198,19 +217,19 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .AutoActivate();
 
             builder.RegisterType<CandlesCacheInitalizationService>()
-                .WithParameter(TypedParameter.From(_settings.HistoryTicksCacheSize))
+                .WithParameter(TypedParameter.From(_settings.HistoryCache.HistoryTicksCacheSize))
                 .As<ICandlesCacheInitalizationService>();
 
             builder.RegisterType<CandlesPersistenceQueueSnapshotRepository>()
                 .As<ICandlesPersistenceQueueSnapshotRepository>()
                 .WithParameter(TypedParameter.From(AzureBlobStorage.Create(_dbSettings.ConnectionString(x => x.SnapshotsConnectionString), TimeSpan.FromMinutes(10))));
 
-            builder.RegisterType<RedisCacheTruncator>()
+            builder.RegisterType<RedisCacheCaretaker>()
                 .As<IStartable>()
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(_marketType))
-                .WithParameter(TypedParameter.From(_settings.CacheCleanupPeriod))
-                .WithParameter(TypedParameter.From(_settings.HistoryTicksCacheSize))
+                .WithParameter(TypedParameter.From(_settings.HistoryCache.CacheCheckupPeriod))
+                .WithParameter(TypedParameter.From(_settings.HistoryCache.HistoryTicksCacheSize))
                 .AutoActivate();
 
             RegisterCandlesMigration(builder);
@@ -271,6 +290,17 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .AsSelf()
                 .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlQueryBatchSize))
                 .WithParameter(TypedParameter.From(_settings.Migration.MigrationEnabled))
+                .SingleInstance();
+        }
+
+        private void RegisterCandlesFiltration(ContainerBuilder builder)
+        {
+            builder.RegisterType<CandlesFiltrationService>()
+                .As<ICandlesFiltrationService>()
+                .SingleInstance();
+
+            builder.RegisterType<CandlesFiltrationManager>()
+                .AsSelf()
                 .SingleInstance();
         }
 

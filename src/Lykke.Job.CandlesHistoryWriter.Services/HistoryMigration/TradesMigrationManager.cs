@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Common.Log;
@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Assets;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.HistoryMigration;
+
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 {
@@ -18,7 +19,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
         private readonly ILog _log;
 
         private readonly int _sqlQueryBatchSize;
-
         public bool MigrationEnabled { get; }
 
         public TradesMigrationManager(
@@ -35,8 +35,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             _tradesMigrationHealthService = tradesMigrationHealthService ?? throw new ArgumentNullException(nameof(tradesMigrationHealthService));
             _log = log ?? throw new ArgumentNullException(nameof(log));
 
-            _sqlQueryBatchSize = sqlQueryBatchSize;
 
+            _sqlQueryBatchSize = sqlQueryBatchSize;
             MigrationEnabled = migrationEnabled;
         }
 
@@ -87,6 +87,27 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             _tradesMigrationService.MigrateTradesCandlesAsync(removeByDate, assetSearchTokens); 
 
             return true;
+        }
+
+        private void ExtendStoredCandles(ref TradesCandleBatch current)
+        {
+            var storedCandles =
+                _candlesHistoryRepository.GetCandlesAsync(current.AssetId, current.TimeInterval, TradesCandleBatch.PriceType, current.MinTimeStamp,
+                    current.MaxTimeStamp.AddSeconds((int)current.TimeInterval)).GetAwaiter().GetResult().ToList();
+            if (!storedCandles.Any())
+                return;
+
+            for (int i = 0; i < current.CandlesCount; i++)
+            {
+                var timestamp = current.Candles.Values.ElementAt(i).Timestamp;
+                var stored = storedCandles.FirstOrDefault(s => s.Timestamp == timestamp);
+                if (stored != null)
+                {
+                    current.Candles[timestamp.ToFileTimeUtc()] =
+                        stored.ExtendBy(current.Candles[timestamp.ToFileTimeUtc()]);
+                    storedCandles.Remove(stored);
+                }
+            }
         }
     }
 }

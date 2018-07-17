@@ -25,6 +25,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
         private readonly TimeSpan _sqlTimeout;
         private readonly int _candlesPersistenceQueueMaxSize;
 
+
         public TradesMigrationService(
             ICandlesHistoryRepository candlesHistoryRepository,
             TradesMigrationHealthService tradesMigrationHealthService,
@@ -59,6 +60,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                     $"Starting trades migration for {searchToken.AssetPairId}.");
 
                 try
+
                 {
                     var historyMaker = new TradesProcessor(_tradesMigrationHealthService, _candlesHistoryRepository,
                         searchToken.AssetPairId, _candlesPersistenceQueueMaxSize, migrateByDate);
@@ -213,6 +215,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                         _persistenceCandleQueue[interval].Count;
 
                     _persistenceCandleQueue[interval] = new List<ICandle>(_persistenceQueueMaxSize);
+
                 }
 
                 await Task.WhenAll(dataWritingTasks);

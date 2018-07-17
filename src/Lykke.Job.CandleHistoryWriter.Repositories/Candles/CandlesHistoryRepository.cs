@@ -71,6 +71,44 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             }
         }
 
+        public async Task<bool> DeleteCandlesAsync(string assetPairId, CandleTimeInterval interval, CandlePriceType priceType, DateTime? fromIncluding = null, DateTime? toNotIncluding = null)
+        {
+            var repo = GetRepo(assetPairId, interval);
+            try
+            {
+                var firstCandle = await repo.TryGetFirstCandleAsync(priceType, interval);
+                // Return if there are no candles.
+                if (firstCandle == null)
+                    return false;
+
+                var realUpperLimit = toNotIncluding ?? DateTime.UtcNow.TruncateTo(interval).AddIntervalTicks(1, interval); // For being able to delete all the history till UtcNow.
+
+                // Also return if there are no candles before toNotIncluding.
+                if (realUpperLimit <= firstCandle.Timestamp)
+                    return false;
+
+                DateTime realLowLimit;
+
+                if (fromIncluding == null || fromIncluding < firstCandle.Timestamp)
+                    realLowLimit = firstCandle.Timestamp;
+                else realLowLimit = fromIncluding.Value;
+
+                // And the last check
+                if (realLowLimit >= realUpperLimit)
+                    return false;
+
+                // Well, here we go)
+                await repo.DeleteAsync(priceType, interval, realLowLimit, realUpperLimit);
+
+                return true;
+            }
+            catch
+            {
+                ResetRepo(assetPairId, interval);
+                throw;
+            }
+        }
+
         public async Task<ICandle> TryGetFirstCandleAsync(string assetPairId, CandleTimeInterval interval, CandlePriceType priceType)
         {
             var repo = GetRepo(assetPairId, interval);
@@ -112,7 +150,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             var repo = GetRepo(assetPairId, interval);
             try
             {
-                return 
+
                     // ReSharper disable once PossibleMultipleEnumeration
                     await repo.ReplaceCandlesAsync(candlesToReplace, priceType);
             }
@@ -122,6 +160,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
                 throw;
             }
         }
+
 
         private (string assetPairId, CandleTimeInterval interval, CandlePriceType priceType) PreEvaluateInputCandleSet(
             IEnumerable<ICandle> candlesToCheck)
@@ -145,6 +184,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             return (assetPairId: assetPairId, 
                 interval: interval, 
                 priceType: priceType);
+
         }
 
         private void ResetRepo(string assetPairId, CandleTimeInterval interval)

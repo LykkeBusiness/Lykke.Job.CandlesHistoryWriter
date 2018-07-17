@@ -6,6 +6,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
 {
     public class CandlesFiltrationHealthReport
     {
+
         public bool AnalyzeOnly { get; }
 
         private CandlesFiltrationState _state;
@@ -49,6 +50,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.Filtration
             DeletedCandlesCount = new ConcurrentDictionary<CandlePriceType, int>();
             ReplacedCandlesCount = new ConcurrentDictionary<CandlePriceType, int>();
             Errors = new ConcurrentBag<string>();
+
         }
     }
 

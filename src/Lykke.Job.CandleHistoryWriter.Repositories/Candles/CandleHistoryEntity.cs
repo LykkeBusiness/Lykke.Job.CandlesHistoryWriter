@@ -136,6 +136,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             return FormatRowKey(time);
         }
 
+
         public static DateTime ParseRowKey(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -155,6 +156,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
             throw new InvalidOperationException($"Failed to parse RowKey '{value}' as DateTime");
         }
+
 
         public int DeleteCandles(IEnumerable<ICandle> candlesToDelete)
         {

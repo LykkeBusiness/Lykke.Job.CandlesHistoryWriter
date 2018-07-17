@@ -12,5 +12,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Services.HistoryMigration
         /// <param name="migrateByDate">The date and time upper limit (exclusive) for candles migration.</param>
         /// <param name="assetSearchTokens">Search parameters for asset pairs.</param>
         Task MigrateTradesCandlesAsync(DateTime? migrateByDate, List<(string AssetPairId, string SearchToken, string ReverseSearchToken)> assetSearchTokens);
+
     }
 }

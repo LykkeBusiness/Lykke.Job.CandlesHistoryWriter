@@ -33,6 +33,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             // The list of extreme candles for all stored time periods (there will be not so disastrous amount of them
             // to run out of memory).
             var extremeCandles = new List<ICandle>();
+
             List<ICandle> lastCandles = null;
 
             // Now we will go through the candle storage deeps from the biggest candle time interval to the smallest one.
@@ -48,6 +49,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             {
                 List<ICandle> currentCandles;
 
+
                 var interval = Constants.StoredIntervals[i];
                 if (i == Constants.StoredIntervals.Length - 1)
                 {
@@ -56,6 +58,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 
                     currentCandles = candles
                         .Where(c => IsExtremeCandle(c, limitLow, limitHigh, epsilon))
+
                         .ToList();
 
                     // There are no incorrect candles at all - returning.
@@ -93,6 +96,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
             // smallest interval to the biggest, back. But now we will delete the smallest candles at all, and then
             // recalculate (and replace in storage) the bigger candles.
 
+
             int deletedCountSummary = 0, replacedCountSummary = 0;
             
             var candlesByInterval = extremeCandles
@@ -117,7 +121,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                 }
 
                 var smallerInterval = GetSmallerInterval(interval);
-
                 // My dear friend, who will read or refactor this code in future, please, excuse me for such a terrible
                 // loop cascade. Currently, I just can't imagine how to make it shorter and more comfortable for reading.
                 // And from the other side, there is no such a necessity to invent an ideal bicycle here.
@@ -129,10 +132,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                     var dateFrom = candle.Timestamp;
                     var dateTo = candle.Timestamp.AddIntervalTicks(1, interval);
 
+
                     var smallerCandles = await _candlesHistoryRepository.GetCandlesAsync(candle.AssetPairId,
                         smallerInterval, priceType, dateFrom, dateTo);
 
                     // Trying to reconstruct the candle from the corresponfing smaller interval candles, if any.
+
                     ICandle updatedCandle = null;
                     foreach (var smallerCandle in smallerCandles)
                     {
@@ -144,6 +149,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
                                 .ExtendBy(smallerCandle
                                     .RebaseToInterval(interval));
                     }
+
 
                     // If the candle is not empty (e.g., there are some smaller interval candles for its construction),
                     // we should update it in storage. Otherwise, it is to be deleted from there.
@@ -185,6 +191,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration
 
             var dtFrom = firstBiggestCandle.Timestamp; // The first candle's in storage timestamp
             var dtTo = DateTime.UtcNow.TruncateTo(CandleTimeInterval.Month); // The begining of the current month (for further candles reading with exclusive upper date-time border).
+
 
             return (dateFrom: dtFrom, dateTo: dtTo);
         }

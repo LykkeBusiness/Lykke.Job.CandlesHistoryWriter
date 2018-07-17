@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.HistoryMigration.HistoryProviders;
 using Lykke.Job.CandlesHistoryWriter.Models.Filtration;
-using Lykke.Job.CandlesHistoryWriter.Models.Migration;
 using Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration;
 using Lykke.Job.CandlesHistoryWriter.Services.HistoryMigration.HistoryProviders.MeFeedHistory;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +30,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Controllers
             CandlesFiltrationManager candlesFiltrationManager,
             IHistoryProvidersManager historyProvidersManager,
             TradesMigrationHealthService tradesMigrationHealthService)
+
         {
             _candlesMigrationManager = candlesMigrationManager;
             _tradesMigrationManager = tradesMigrationManager;
@@ -100,7 +102,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Controllers
         /// </summary>
         [HttpPost]
         [Route("trades")]
-        public IActionResult MigrateTrades([FromBody] TradesMigrationRequestModel request)
+        public IActionResult MigrateTrades(bool preliminaryRemoval, DateTime? removeByDate, string[] assetPairIds)
         {
             if (request == null)
                 return BadRequest("The request data is corrupted - unable to deserialize.");
@@ -116,6 +118,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Controllers
 
             // This method is sync but internally it starts a new task and returns
             var migrationStarted = _tradesMigrationManager.Migrate(request.TimestampUpperLimit, request.AssetPairIds);
+
 
             if (migrationStarted)
                 return Ok();
@@ -197,5 +200,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Controllers
         }
 
         #endregion
+
     }
 }

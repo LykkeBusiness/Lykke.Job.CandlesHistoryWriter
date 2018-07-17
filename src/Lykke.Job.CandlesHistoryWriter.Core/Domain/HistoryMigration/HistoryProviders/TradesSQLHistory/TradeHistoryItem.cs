@@ -22,4 +22,10 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.HistoryMigration.HistoryPro
         Buy,
         Sell
     }
+
+    public enum TradeDirection
+    {
+        Buy,
+        Sell
+    }
 }
