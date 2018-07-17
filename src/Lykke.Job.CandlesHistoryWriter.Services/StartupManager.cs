@@ -51,7 +51,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
             var tasks = new List<Task>
             {
-                _snapshotSerializer.DeserializeAsync(_persistenceQueue, _persistenceQueueSnapshotRepository)
+                //_snapshotSerializer.DeserializeAsync(_persistenceQueue, _persistenceQueueSnapshotRepository)
             };
 
             if (!_migrationEnabled)
@@ -67,11 +67,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting persistence queue...");
 
-            _persistenceQueue.Start();
+            //_persistenceQueue.Start();
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting persistence manager...");
 
-            _persistenceManager.Start();
+            //_persistenceManager.Start();
 
             // We can not combine it with the previous if(!_migration...) due to launch order importance.
             if (!_migrationEnabled)
