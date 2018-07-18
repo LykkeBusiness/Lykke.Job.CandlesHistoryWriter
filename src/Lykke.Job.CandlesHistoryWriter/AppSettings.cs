@@ -34,6 +34,7 @@ namespace Lykke.Job.CandlesHistoryWriter
         [UsedImplicitly(ImplicitUseKindFlags.Assign)]
         public RedisSettings RedisSettings { get; set; }
 
+        [Optional, CanBeNull]
         [UsedImplicitly(ImplicitUseKindFlags.Assign)]
         public MonitoringServiceClientSettings MonitoringServiceClient { get; set; }
     }
