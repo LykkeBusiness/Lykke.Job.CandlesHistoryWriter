@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
@@ -6,9 +7,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
     public class MigrationSettings
     {
         public bool MigrationEnabled { get; set; }
-        [Optional]
+        [Optional, CanBeNull]
         public QuotesSettings Quotes { get; set; }
-        [Optional]
+        [Optional, CanBeNull]
         public TradesSettings Trades { get; set; }
     }
 

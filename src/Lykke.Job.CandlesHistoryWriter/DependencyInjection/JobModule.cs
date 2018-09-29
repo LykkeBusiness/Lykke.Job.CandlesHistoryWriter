@@ -176,16 +176,31 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                     .SingleInstance();
             }
 
+            if (_settings.Migration != null)
+            {
+                builder.RegisterType<StartupManager>()
+                    .As<IStartupManager>()
+                    .WithParameter(TypedParameter.From(_settings.Migration.MigrationEnabled))
+                    .SingleInstance();
 
-            builder.RegisterType<StartupManager>()
-                .As<IStartupManager>()
-                .WithParameter(TypedParameter.From(_settings.Migration.MigrationEnabled))
-                .SingleInstance();
+                builder.RegisterType<ShutdownManager>()
+                    .As<IShutdownManager>()
+                    .WithParameter(TypedParameter.From(_settings.Migration.MigrationEnabled))
+                    .SingleInstance();
+            }
+            else
+            {
+                builder.RegisterType<StartupManager>()
+                    .As<IStartupManager>()
+                    .WithParameter(TypedParameter.From(false))
+                    .SingleInstance();
 
-            builder.RegisterType<ShutdownManager>()
-                .As<IShutdownManager>()
-                .WithParameter(TypedParameter.From(_settings.Migration.MigrationEnabled))
-                .SingleInstance();
+                builder.RegisterType<ShutdownManager>()
+                    .As<IShutdownManager>()
+                    .WithParameter(TypedParameter.From(false))
+                    .SingleInstance();
+            }
+            
 
             builder.RegisterType<SnapshotSerializer>()
                 .As<ISnapshotSerializer>()
@@ -269,58 +284,63 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 
         private void RegisterCandlesMigration(ContainerBuilder builder)
         {
-            if (!string.IsNullOrWhiteSpace(_dbSettings.CurrentValue.FeedHistoryConnectionString))
+           
+
+            if (_settings.Migration != null)
             {
-                builder.RegisterType<FeedHistoryRepository>()
-                    .As<IFeedHistoryRepository>()
-                    .WithParameter(TypedParameter.From(AzureTableStorage<FeedHistoryEntity>.Create(
-                        _dbSettings.ConnectionString(x => x.FeedHistoryConnectionString),
-                        "FeedHistory",
-                        _log,
-                        maxExecutionTimeout: TimeSpan.FromMinutes(5))))
+                if (!string.IsNullOrWhiteSpace(_dbSettings.CurrentValue.FeedHistoryConnectionString))
+                {
+                    builder.RegisterType<FeedHistoryRepository>()
+                        .As<IFeedHistoryRepository>()
+                        .WithParameter(TypedParameter.From(AzureTableStorage<FeedHistoryEntity>.Create(
+                            _dbSettings.ConnectionString(x => x.FeedHistoryConnectionString),
+                            "FeedHistory",
+                            _log,
+                            maxExecutionTimeout: TimeSpan.FromMinutes(5))))
+                        .SingleInstance();
+                }
+                builder.RegisterType<CandlesMigrationManager>()
+                    .AsSelf()
+                    .WithParameter(TypedParameter.From(_settings.Migration))
+                    .SingleInstance();
+
+                builder.RegisterType<CandlesesHistoryMigrationService>()
+                    .As<ICandlesHistoryMigrationService>()
+                    .SingleInstance();
+
+                builder.RegisterType<MigrationCandlesGenerator>()
+                    .AsSelf()
+                    .SingleInstance();
+
+                builder.RegisterType<EmptyMissedCandlesGenerator>()
+                    .As<IMissedCandlesGenerator>()
+                    .SingleInstance();
+
+                builder.RegisterType<HistoryProvidersManager>()
+                    .As<IHistoryProvidersManager>()
+                    .SingleInstance();
+
+                RegisterHistoryProvider<MeFeedHistoryProvider>(builder);
+
+                builder.RegisterType<TradesMigrationHealthService>()
+                    .AsSelf()
+                    .SingleInstance();
+
+                builder.RegisterType<TradesMigrationService>()
+                    .As<ITradesMigrationService>()
+                    .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlTradesDataSourceConnString))
+                    .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlQueryBatchSize))
+                    .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlCommandTimeout))
+                    .WithParameter(TypedParameter.From(_settings.Migration.Trades.CandlesPersistenceQueueLimit))
+                    .SingleInstance();
+
+                builder.RegisterType<TradesMigrationManager>()
+                    .AsSelf()
+                    .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlQueryBatchSize))
+                    .WithParameter(TypedParameter.From(_settings.Migration.MigrationEnabled))
                     .SingleInstance();
             }
-
-            builder.RegisterType<CandlesMigrationManager>()
-                .AsSelf()
-                .WithParameter(TypedParameter.From(_settings.Migration))
-                .SingleInstance();
-
-            builder.RegisterType<CandlesesHistoryMigrationService>()
-                .As<ICandlesHistoryMigrationService>()
-                .SingleInstance();
-
-            builder.RegisterType<MigrationCandlesGenerator>()
-                .AsSelf()
-                .SingleInstance();
-
-            builder.RegisterType<EmptyMissedCandlesGenerator>()
-                .As<IMissedCandlesGenerator>()
-                .SingleInstance();
-
-            builder.RegisterType<HistoryProvidersManager>()
-                .As<IHistoryProvidersManager>()
-                .SingleInstance();
-
-            RegisterHistoryProvider<MeFeedHistoryProvider>(builder);
-
-            builder.RegisterType<TradesMigrationHealthService>()
-                .AsSelf()
-                .SingleInstance();
-
-            builder.RegisterType<TradesMigrationService>()
-                .As<ITradesMigrationService>()
-                .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlTradesDataSourceConnString))
-                .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlQueryBatchSize))
-                .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlCommandTimeout))
-                .WithParameter(TypedParameter.From(_settings.Migration.Trades.CandlesPersistenceQueueLimit))
-                .SingleInstance();
-
-            builder.RegisterType<TradesMigrationManager>()
-                .AsSelf()
-                .WithParameter(TypedParameter.From(_settings.Migration.Trades.SqlQueryBatchSize))
-                .WithParameter(TypedParameter.From(_settings.Migration.MigrationEnabled))
-                .SingleInstance();
+         
         }
 
         private void RegisterCandlesFiltration(ContainerBuilder builder)
