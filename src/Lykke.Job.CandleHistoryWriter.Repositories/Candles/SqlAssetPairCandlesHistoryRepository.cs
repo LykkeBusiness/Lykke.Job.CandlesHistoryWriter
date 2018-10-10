@@ -44,8 +44,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
         private static readonly string GetUpdateClause = string.Join(",",
             DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
-        private readonly string assetName;
-        private readonly string TableName;
+        private readonly string _tableName;
         private readonly string _connectionString;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
@@ -55,13 +54,13 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             _systemClock = new SystemClock();
             _log = log;
             _connectionString = connectionString;
-            TableName = "Candles.candleshistory_" + assetName;
+            _tableName = "Candles.candleshistory_" + assetName;
             string createTableScript = CreateTableScript.Replace("UNIQUEINDEX", assetName);
 
             using (var conn = new SqlConnection(_connectionString))
             {
 
-                try { conn.CreateTableIfDoesntExists(createTableScript, TableName); }
+                try { conn.CreateTableIfDoesntExists(createTableScript, _tableName); }
                 catch (Exception ex)
                 {
                     _log?.WriteErrorAsync(nameof(SqlAssetPairCandlesHistoryRepository), "CreateTableIfDoesntExists", null, ex);
@@ -83,12 +82,12 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
                 try
                 {
                     var timestamp = _systemClock.UtcNow.UtcDateTime;
-                    string sql = $"IF EXISTS (SELECT * FROM {TableName}" +
+                    string sql = $"IF EXISTS (SELECT * FROM {_tableName}" +
                                  $" WHERE PriceType=@PriceType AND TimeStamp=@TimeStamp AND TimeInterval=@TimeInterval)" +
-                                 $" BEGIN UPDATE {TableName}  SET [Open]=@Open, [Close]=@Close, [High]=@High, [Low]=@Low, [TradingVolume]=@TradingVolume, [TradingOppositeVolume]=@TradingOppositeVolume, [LastTradePrice]=@LastTradePrice, [LastUpdateTimestamp]='{timestamp}'" +
+                                 $" BEGIN UPDATE {_tableName}  SET [Open]=@Open, [Close]=@Close, [High]=@High, [Low]=@Low, [TradingVolume]=@TradingVolume, [TradingOppositeVolume]=@TradingOppositeVolume, [LastTradePrice]=@LastTradePrice, [LastUpdateTimestamp]='{timestamp}'" +
                                  $" WHERE  PriceType=@PriceType AND TimeStamp=@TimeStamp AND TimeInterval=@TimeInterval END" +
                                  " ELSE " +
-                                 $" BEGIN INSERT INTO {TableName} ({GetColumns}) values ({GetFields}) END";
+                                 $" BEGIN INSERT INTO {_tableName} ({GetColumns}) values ({GetFields}) END";
 
                     await conn.ExecuteAsync(
                         sql,
@@ -115,7 +114,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
                 try
                 {
-                    var objects = await conn.QueryAsync<SqlCandleHistoryItem>($"SELECT * FROM {TableName} {whereClause}",
+                    var objects = await conn.QueryAsync<SqlCandleHistoryItem>($"SELECT * FROM {_tableName} {whereClause}",
                         new { priceTypeVar = priceType, intervalVar = interval, fromVar = from, toVar = to }, null, commandTimeout: readCommandTimeout);
                     return objects;
                 }
@@ -136,7 +135,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             using (var conn = new SqlConnection(_connectionString))
             {
                 var candle = await conn.QueryAsync<ICandle>(
-                    $"SELECT TOP(1) * FROM {TableName} WHERE PriceType=@priceTypeVar AND TimeInterval=@intervalVar ",
+                    $"SELECT TOP(1) * FROM {_tableName} WHERE PriceType=@priceTypeVar AND TimeInterval=@intervalVar ",
                                                                     new { priceTypeVar = priceType, intervalVar = timeInterval });
                 return candle.FirstOrDefault();
             }

@@ -22,5 +22,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
 
         public int HistoryTicksCacheSize { get; set; }
         public TimeSpan CacheCleanupPeriod { get; set; }
+
     }
 }

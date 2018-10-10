@@ -6,7 +6,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
 {
     public class MigrationSettings
     {
-        [Optional]
         public bool MigrationEnabled { get; set; }
         [Optional, CanBeNull]
         public QuotesSettings Quotes { get; set; }

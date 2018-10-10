@@ -269,7 +269,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 
             }
 
-            builder.RegisterType<RedisCacheTruncator>()
+            builder.RegisterType<RedisCacheCaretaker>()
                 .As<IStartable>()
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(_marketType))
