@@ -4,6 +4,7 @@
 using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -18,6 +19,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
         private readonly CleanupSettings _cleanupSettings;
         private readonly string _connectionString;
         private readonly ILog _log;
+        private static int _inProgress;
 
         public SqlCandlesCleanup(CleanupSettings cleanupSettings, string connectionString, ILog log)
         {
@@ -34,9 +36,16 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
                     "Cleanup is disabled in settings, skipping.");
                 return;
             }
-            
+                
             using (var conn = new SqlConnection(_connectionString))
             {
+                if (1 == Interlocked.Exchange(ref _inProgress, 1))
+                {
+                    await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke),
+                        "Cleanup is already in progress, skipping.");
+                    return;
+                }
+                
                 try
                 {
                     var procedureBody = "01_Candles.SP_Cleanup.sql".GetFileContent();
@@ -45,7 +54,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
                     await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke), "Starting candles cleanup.");
                     var sw = new Stopwatch();
                     sw.Start();
-                    
+
                     await conn.ExecuteAsync("EXEC Candles.SP_Cleanup", commandTimeout: 24 * 60 * 60);
 
                     await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke),
@@ -56,6 +65,10 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
                 {
                     await _log.WriteErrorAsync(nameof(SqlCandlesCleanup), nameof(Invoke), null, ex);
                     throw;
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _inProgress, 0);
                 }
             }
         }
