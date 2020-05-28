@@ -111,7 +111,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                     .ToArray();
 
                 await _candlesManager.ProcessCandlesAsync(candles);
-
+                
                 var assetPairs = candlesUpdate.Candles.Select(c => c.AssetPairId).Distinct();
 
                 await _log.WriteInfoAsync(nameof(CandlesSubscriber), nameof(ProcessCandlesUpdatedEventAsync),
