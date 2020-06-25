@@ -24,8 +24,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         private readonly ICandlesManager _candlesManager;
         private readonly ICandlesChecker _candlesChecker;
         private readonly RabbitEndpointSettings _settings;
+        private readonly string _shardName;
 
         private RabbitMqSubscriber<CandlesUpdatedEvent> _subscriber;
+
+        private const string DefaultShardName = "default";
 
         public CandlesSubscriber(ILog log, ICandlesManager candlesManager, ICandlesChecker checker, RabbitEndpointSettings settings)
         {
@@ -33,6 +36,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             _candlesManager = candlesManager;
             _candlesChecker = checker;
             _settings = settings;
+            _shardName = _settings.ShardName ?? DefaultShardName;
         }
 
         private RabbitMqSubscriptionSettings _subscriptionSettings;
@@ -43,7 +47,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 if (_subscriptionSettings == null)
                 {
                     _subscriptionSettings = RabbitMqSubscriptionSettings
-                        .CreateForSubscriber(_settings.ConnectionString, _settings.Namespace, "candles-v2", _settings.Namespace, "candleshistory")
+                        .CreateForSubscriber(_settings.ConnectionString, _settings.Namespace, $"candles-v2.{_shardName}", _settings.Namespace, "candleshistory")
                         .MakeDurable();
                 }
                 return _subscriptionSettings;
