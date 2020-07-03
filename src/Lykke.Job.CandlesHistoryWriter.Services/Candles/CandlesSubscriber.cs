@@ -28,15 +28,17 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
         private RabbitMqSubscriber<CandlesUpdatedEvent> _subscriber;
 
-        private const string DefaultShardName = "default";
-
-        public CandlesSubscriber(ILog log, ICandlesManager candlesManager, ICandlesChecker checker, RabbitEndpointSettings settings)
+        public CandlesSubscriber(ILog log, 
+            ICandlesManager candlesManager, 
+            ICandlesChecker checker, 
+            RabbitEndpointSettings settings, 
+            CandlesShardRemoteSettings candlesShardRemoteSettings)
         {
             _log = log;
             _candlesManager = candlesManager;
             _candlesChecker = checker;
             _settings = settings;
-            _shardName = _settings.ShardName ?? DefaultShardName;
+            _shardName = candlesShardRemoteSettings.Name;
         }
 
         private RabbitMqSubscriptionSettings _subscriptionSettings;
