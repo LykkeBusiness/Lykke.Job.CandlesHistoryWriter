@@ -24,8 +24,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             ICandlesPersistenceQueue persistenceQueue,
             IHealthService healthService,
             ILog log,
-            PersistenceSettings settings) : 
-
+            PersistenceSettings settings) :
             base(nameof(CandlesPersistenceManager), (int)TimeSpan.FromSeconds(5).TotalMilliseconds, log)
         {
             _persistenceQueue = persistenceQueue;
