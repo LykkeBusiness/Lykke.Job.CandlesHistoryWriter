@@ -132,9 +132,6 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             builder.Register(c => ConnectionMultiplexer.Connect(_redisSettings.Configuration))
                 .As<IConnectionMultiplexer>()
                 .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConnectionMultiplexer>().GetDatabase())
-                .As<IDatabase>();
         }
 
 
