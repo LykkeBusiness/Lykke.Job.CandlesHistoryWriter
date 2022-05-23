@@ -28,14 +28,14 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         private const string TimestampFormat = "yyyyMMddHHmmss";
 
         private readonly IHealthService _healthService;
-        private readonly IDatabase _database;
         private readonly MarketType _market;
+        private readonly IConnectionMultiplexer _redis;
 
-        public RedisCandlesCacheService(IHealthService healthService, IDatabase database, MarketType market)
+        public RedisCandlesCacheService(IHealthService healthService, MarketType market, IConnectionMultiplexer redis)
         {
             _healthService = healthService;
-            _database = database;
             _market = market;
+            _redis = redis;
         }
 
         public IImmutableDictionary<string, IImmutableList<ICandle>> GetState()
@@ -80,8 +80,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             var key = GetKey(_market, assetPairId, priceType, timeInterval);
 
             // Cleans cache
-
-            await _database.KeyDeleteAsync(key);
+            var db = _redis.GetDatabase();
+            await db.KeyDeleteAsync(key);
 
             foreach (var candlesBatch in candles.Batch(100))
             {
@@ -89,7 +89,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                     .Select(candle => new SortedSetEntry(SerializeCandle(candle), 0))
                     .ToArray();
 
-                await _database.SortedSetAddAsync(key, entites);
+                await db.SortedSetAddAsync(key, entites);
             }
         }
 
@@ -101,7 +101,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             // without transaction at the moment candle can be missed or doubled
             // depending on the order of the remove/add calls
 
-            var transaction = _database.CreateTransaction();
+            var transaction = _redis.GetDatabase().CreateTransaction();
             var tasks = new List<Task>();
 
             foreach (var candle in candles)
