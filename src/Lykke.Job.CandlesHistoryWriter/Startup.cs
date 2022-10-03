@@ -31,6 +31,8 @@ using Lykke.MonitoringServiceApiCaller;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
+using Lykke.Snow.Common.Correlation;
+using Lykke.Snow.Common.Correlation.Cqrs;
 using Microsoft.Extensions.Logging;
 using Lykke.Snow.Common.Startup.Log;
 using Lykke.Snow.Common.Startup.Hosting;
@@ -93,6 +95,9 @@ namespace Lykke.Job.CandlesHistoryWriter
                     _mtSettingsManager.CurrentValue.SlackNotifications);
 
                 services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(Log));
+                var correlationContextAccessor = new CorrelationContextAccessor();
+                services.AddSingleton(correlationContextAccessor);
+                services.AddSingleton<CqrsCorrelationManager>();
                 
                 services.AddApplicationInsightsTelemetry();
             }
