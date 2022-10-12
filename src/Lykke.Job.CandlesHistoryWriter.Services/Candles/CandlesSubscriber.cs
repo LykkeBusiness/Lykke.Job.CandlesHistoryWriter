@@ -24,17 +24,17 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         private readonly ICandlesManager _candlesManager;
         private readonly ICandlesChecker _candlesChecker;
         private readonly RabbitEndpointSettings _settings;
-        private readonly ushort _prefetch;
         private readonly string _shardName;
+        private readonly ushort _prefetch;
+
+        private const int DefaultPrefetch = 100;
 
         private RabbitMqSubscriber<CandlesUpdatedEvent> _subscriber;
 
-        private const int DefaultPrefetch = 100;
-        
         public CandlesSubscriber(ILog log, 
             ICandlesManager candlesManager, 
             ICandlesChecker checker, 
-            RabbitEndpointSettings settings, 
+            RabbitEndpointSettings settings,
             CandlesShardRemoteSettings candlesShardRemoteSettings,
             ushort? prefetch)
         {
