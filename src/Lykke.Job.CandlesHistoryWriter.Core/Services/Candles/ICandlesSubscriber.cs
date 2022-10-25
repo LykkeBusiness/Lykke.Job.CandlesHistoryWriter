@@ -3,7 +3,7 @@
 
 using Autofac;
 using Common;
-using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.RabbitMqBroker;
 
 namespace Lykke.Job.CandlesHistoryWriter.Core.Services.Candles
 {
