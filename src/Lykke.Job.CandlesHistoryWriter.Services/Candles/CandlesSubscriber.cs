@@ -14,6 +14,10 @@ using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using Lykke.Job.CandlesHistoryWriter.Services.Settings;
+using Lykke.RabbitMqBroker.Subscriber.Deserializers;
+using Lykke.RabbitMqBroker.Subscriber.MessageReadStrategies;
+using Lykke.RabbitMqBroker.Subscriber.Middleware.ErrorHandling;
+using Microsoft.Extensions.Logging;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
@@ -21,6 +25,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
     public class CandlesSubscriber : ICandlesSubscriber
     {
         private readonly ILog _log;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ICandlesManager _candlesManager;
         private readonly ICandlesChecker _candlesChecker;
         private readonly RabbitEndpointSettings _settings;
@@ -31,14 +36,16 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
         private const int DefaultPrefetch = 100;
         
-        public CandlesSubscriber(ILog log, 
-            ICandlesManager candlesManager, 
-            ICandlesChecker checker, 
-            RabbitEndpointSettings settings, 
+        public CandlesSubscriber(ILog log,
+            ILoggerFactory loggerFactory,
+            ICandlesManager candlesManager,
+            ICandlesChecker checker,
+            RabbitEndpointSettings settings,
             CandlesShardRemoteSettings candlesShardRemoteSettings,
             ushort? prefetch)
         {
             _log = log;
+            _loggerFactory = loggerFactory;
             _candlesManager = candlesManager;
             _candlesChecker = checker;
             _settings = settings;
@@ -47,6 +54,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         }
 
         private RabbitMqSubscriptionSettings _subscriptionSettings;
+
         public RabbitMqSubscriptionSettings SubscriptionSettings
         {
             get
@@ -54,9 +62,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 if (_subscriptionSettings == null)
                 {
                     _subscriptionSettings = RabbitMqSubscriptionSettings
-                        .CreateForSubscriber(_settings.ConnectionString, _settings.Namespace, $"candles-v2.{_shardName}", _settings.Namespace, "candleshistory")
+                        .CreateForSubscriber(_settings.ConnectionString, _settings.Namespace,
+                            $"candles-v2.{_shardName}", _settings.Namespace, "candleshistory")
                         .MakeDurable();
                 }
+
                 return _subscriptionSettings;
             }
         }
@@ -65,17 +75,18 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         {
             try
             {
-                _subscriber = new RabbitMqSubscriber<CandlesUpdatedEvent>(SubscriptionSettings,
-                        new ResilientErrorHandlingStrategy(_log, SubscriptionSettings,
-                            retryTimeout: TimeSpan.FromSeconds(10),
-                            retryNum: 10,
-                            next: new DeadQueueErrorHandlingStrategy(_log, SubscriptionSettings)))
+                _subscriber = new RabbitMqSubscriber<CandlesUpdatedEvent>(
+                        _loggerFactory.CreateLogger<RabbitMqSubscriber<CandlesUpdatedEvent>>(),
+                        SubscriptionSettings)
+                    .UseMiddleware(new ResilientErrorHandlingMiddleware<CandlesUpdatedEvent>(
+                        _loggerFactory.CreateLogger<ResilientErrorHandlingMiddleware<CandlesUpdatedEvent>>(),
+                        TimeSpan.FromSeconds(10),
+                        10))
                     .SetMessageDeserializer(new MessagePackMessageDeserializer<CandlesUpdatedEvent>())
                     .SetMessageReadStrategy(new MessageReadQueueStrategy())
                     .SetPrefetchCount(_prefetch)
                     .Subscribe(ProcessCandlesUpdatedEventAsync)
                     .CreateDefaultBinding()
-                    .SetLogger(_log)
                     .Start();
             }
             catch (Exception ex)
@@ -98,7 +109,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 if (validationErrors.Any())
                 {
                     var message = string.Join("\r\n", validationErrors);
-                    await _log.WriteWarningAsync(nameof(CandlesSubscriber), nameof(CandlesUpdatedEvent), candlesUpdate.ToJson(), message);
+                    await _log.WriteWarningAsync(nameof(CandlesSubscriber), nameof(CandlesUpdatedEvent),
+                        candlesUpdate.ToJson(), message);
 
                     return;
                 }
@@ -126,7 +138,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
             catch (Exception)
             {
-                await _log.WriteWarningAsync(nameof(CandlesSubscriber), nameof(ProcessCandlesUpdatedEventAsync), candlesUpdate.ToJson(), "Failed to process candle");
+                await _log.WriteWarningAsync(nameof(CandlesSubscriber), nameof(ProcessCandlesUpdatedEventAsync),
+                    candlesUpdate.ToJson(), "Failed to process candle");
                 throw;
             }
         }
@@ -174,6 +187,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 {
                     errors.Add($"Empty '{nameof(candle.AssetPairId)}' in the candle {i}");
                 }
+
                 if (candle.CandleTimestamp.Kind != DateTimeKind.Utc)
                 {
                     errors.Add($"Invalid '{candle.CandleTimestamp}' kind (UTC is required) in the candle {i}");
