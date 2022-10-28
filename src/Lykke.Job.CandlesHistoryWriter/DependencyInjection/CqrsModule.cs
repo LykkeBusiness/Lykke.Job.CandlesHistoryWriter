@@ -13,9 +13,6 @@ using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Cqrs.Middleware.Logging;
 using Lykke.Job.CandlesHistoryWriter.Services.Settings;
 using Lykke.Job.CandlesHistoryWriter.Services.Workflow;
-using Lykke.Messaging;
-using Lykke.Messaging.Contract;
-using Lykke.Messaging.RabbitMq;
 using Lykke.Messaging.Serialization;
 using Lykke.Snow.Common.Correlation.Cqrs;
 using Lykke.Snow.Common.Startup;
@@ -47,31 +44,17 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
-            var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
-            {
-                Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
-            };
-            var messagingEngine = new MessagingEngine(_log, new TransportResolver(
-                new Dictionary<string, TransportInfo>
-                {
-                    {
-                        "RabbitMq",
-                        new TransportInfo(rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName,
-                            rabbitMqSettings.Password, "None", "RabbitMq")
-                    }
-                }), new RabbitMqTransportFactory());
-
             builder.RegisterType<EodStartedProjection>().AsSelf();
             builder.RegisterType<CqrsCorrelationManager>()
                 .AsSelf();
 
-            builder.Register(ctx => CreateEngine(ctx, messagingEngine))
+            builder.Register(CreateEngine)
                 .As<ICqrsEngine>()
                 .SingleInstance()
                 .AutoActivate();
         }
 
-        private RabbitMqCqrsEngine CreateEngine(IComponentContext ctx, IMessagingEngine messagingEngine)
+        private RabbitMqCqrsEngine CreateEngine(IComponentContext ctx)
         {
             var rabbitMqConventionEndpointResolver = new RabbitMqConventionEndpointResolver(
                 "RabbitMq",
