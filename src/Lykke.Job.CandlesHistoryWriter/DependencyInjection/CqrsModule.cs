@@ -13,10 +13,12 @@ using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Cqrs.Middleware.Logging;
 using Lykke.Job.CandlesHistoryWriter.Services.Settings;
 using Lykke.Job.CandlesHistoryWriter.Services.Workflow;
-using Lykke.Messaging;
-using Lykke.Messaging.Contract;
-using Lykke.Messaging.RabbitMq;
 using Lykke.Messaging.Serialization;
+using Lykke.Snow.Common.Correlation.Cqrs;
+using Lykke.Snow.Common.Startup;
+using Lykke.Snow.Cqrs;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
 
 namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 {
@@ -42,34 +44,23 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
-            var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
-            {
-                Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
-            };
-            var messagingEngine = new MessagingEngine(_log, new TransportResolver(
-                new Dictionary<string, TransportInfo>
-                {
-                    {
-                        "RabbitMq",
-                        new TransportInfo(rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName,
-                            rabbitMqSettings.Password, "None", "RabbitMq")
-                    }
-                }), new RabbitMqTransportFactory());
-
             builder.RegisterType<EodStartedProjection>().AsSelf();
+            builder.RegisterType<CqrsCorrelationManager>()
+                .AsSelf();
 
-            builder.Register(ctx => CreateEngine(ctx, messagingEngine))
+            builder.Register(CreateEngine)
                 .As<ICqrsEngine>()
                 .SingleInstance()
                 .AutoActivate();
         }
 
-        private CqrsEngine CreateEngine(IComponentContext ctx, IMessagingEngine messagingEngine)
+        private RabbitMqCqrsEngine CreateEngine(IComponentContext ctx)
         {
-            var rabbitMqConventionEndpointResolver =
-                new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
-                    environment: _settings.EnvironmentName);
-
+            var rabbitMqConventionEndpointResolver = new RabbitMqConventionEndpointResolver(
+                "RabbitMq",
+                SerializationFormat.MessagePack,
+                environment: _settings.EnvironmentName);
+            
             var registrations = new List<IRegistration>
             {
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
@@ -77,9 +68,28 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 Register.EventInterceptors(new DefaultEventLoggingInterceptor(_log)),
                 RegisterContext(),
             };
+            
+            var rabbitMqSettings = new ConnectionFactory
+            {
+                Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
+            };
 
-            return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
-                new DefaultEndpointProvider(), true, registrations.ToArray());
+            var log = new LykkeLoggerAdapter<CqrsModule>(ctx.Resolve<ILogger<CqrsModule>>());
+            var engine = new RabbitMqCqrsEngine(log,
+                ctx.Resolve<IDependencyResolver>(),
+                new DefaultEndpointProvider(),
+                rabbitMqSettings.Endpoint.ToString(),
+                rabbitMqSettings.UserName,
+                rabbitMqSettings.Password,
+                true,
+                registrations.ToArray());
+
+            var correlationManager = ctx.Resolve<CqrsCorrelationManager>();
+            engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);
+            engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
+            engine.StartPublishers();
+
+            return engine;
         }
 
         private IRegistration RegisterContext()
