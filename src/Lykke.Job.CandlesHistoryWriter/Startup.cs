@@ -27,7 +27,6 @@ using Lykke.Job.CandlesHistoryWriter.Models;
 using Lykke.Job.CandlesHistoryWriter.Services.Settings;
 using AzureQueueSettings = Lykke.AzureQueueIntegration.AzureQueueSettings;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
-using Lykke.MonitoringServiceApiCaller;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
@@ -37,7 +36,6 @@ using Microsoft.Extensions.Logging;
 using Lykke.Snow.Common.Startup.Log;
 using Lykke.Snow.Common.Startup.Hosting;
 using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Candles;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 
@@ -221,20 +219,9 @@ namespace Lykke.Job.CandlesHistoryWriter
             {
                 await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
 
-                var monitoringServiceClientSettings =
-                    ApplicationContainer.ResolveOptional<MonitoringServiceClientSettings>();
-
                 Program.AppHost.WriteLogs(Environment, Log);
 
-                if (monitoringServiceClientSettings != null &&
-                    !string.IsNullOrEmpty(monitoringServiceClientSettings.MonitoringServiceUrl))
-                {
-                    await AutoRegistrationInMonitoring.RegisterAsync(Configuration,
-                        monitoringServiceClientSettings.MonitoringServiceUrl,
-                    Log);
-
-                    await Log.WriteMonitorAsync("", "", "Started");
-                }
+                await Log.WriteMonitorAsync(nameof(Startup), nameof(StartApplication), "", "Started");
 
             }
             catch (Exception ex)
