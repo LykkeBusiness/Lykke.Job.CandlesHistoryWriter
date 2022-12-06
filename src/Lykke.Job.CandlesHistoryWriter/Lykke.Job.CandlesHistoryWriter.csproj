@@ -39,7 +39,7 @@
     <PackageReference Include="LykkeBiz.Common" Version="8.1.0" />
     <PackageReference Include="LykkeBiz.HttpClientGenerator" Version="5.0.1" />
     <PackageReference Include="LykkeBiz.Logs.MsSql" Version="3.0.0" />
-    <PackageReference Include="LykkeBiz.Logs.Serilog" Version="3.3.0" />
+    <PackageReference Include="LykkeBiz.Logs.Serilog" Version="3.3.1" />
     <PackageReference Include="LykkeBiz.Messaging" Version="7.0.4" />
     <PackageReference Include="LykkeBiz.Messaging.RabbitMq" Version="3.0.1" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
