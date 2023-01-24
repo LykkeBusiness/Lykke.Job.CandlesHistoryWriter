@@ -202,7 +202,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                 });
                 app.UseStaticFiles();
 
-                appLifetime.ApplicationStarted.Register(() => StartApplication().GetAwaiter().GetResult());
+                appLifetime.ApplicationStarted.Register(() => StartApplication(appLifetime).GetAwaiter().GetResult());
                 appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
                 appLifetime.ApplicationStopped.Register(() => CleanUp().GetAwaiter().GetResult());
             }
@@ -213,7 +213,7 @@ namespace Lykke.Job.CandlesHistoryWriter
             }
         }
 
-        private async Task StartApplication()
+        private async Task StartApplication(IHostApplicationLifetime appLifetime)
         {
             try
             {
@@ -227,7 +227,7 @@ namespace Lykke.Job.CandlesHistoryWriter
             catch (Exception ex)
             {
                 await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StartApplication), "", ex);
-                throw;
+                appLifetime.StopApplication();
             }
         }
 

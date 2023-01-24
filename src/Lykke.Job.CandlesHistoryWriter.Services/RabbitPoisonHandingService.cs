@@ -6,13 +6,10 @@ using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.RabbitMqBroker;
-using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Publisher.Serializers;
-using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.RabbitMqBroker.Subscriber.Deserializers;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Framing;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services
 {
@@ -92,15 +89,18 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
                 var consumer = new EventingBasicConsumer(subscriptionChannel);
                 consumer.Received += (ch, ea) =>
                 {
-                    var message = RepackMessage(ea.Body);
+                    var message = RepackMessage(ea.Body.ToArray());
 
                     if (message != null)
                     {
                         try
                         {
-                            var properties = !string.IsNullOrEmpty(_subscriptionSettings.RoutingKey)
-                                ? new BasicProperties { Type = _subscriptionSettings.RoutingKey }
-                                : null;
+                            IBasicProperties properties = null;
+                            if (!string.IsNullOrEmpty(_subscriptionSettings.RoutingKey))
+                            {
+                                properties = publishingChannel.CreateBasicProperties();
+                                properties.Type = _subscriptionSettings.RoutingKey;
+                            }
 
                             publishingChannel.BasicPublish(_subscriptionSettings.ExchangeName,
                                 _subscriptionSettings.RoutingKey ?? "", properties, message);
