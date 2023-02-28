@@ -32,7 +32,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         private readonly ushort _prefetch;
         private readonly string _shardName;
 
-        private RabbitMqPullingSubscriber<CandlesUpdatedEvent> _subscriber;
+        private RabbitMqSubscriber<CandlesUpdatedEvent> _subscriber;
 
         private const int DefaultPrefetch = 100;
         
@@ -75,8 +75,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         {
             try
             {
-                _subscriber = new RabbitMqPullingSubscriber<CandlesUpdatedEvent>(
-                        _loggerFactory.CreateLogger<RabbitMqPullingSubscriber<CandlesUpdatedEvent>>(),
+                _subscriber = new RabbitMqSubscriber<CandlesUpdatedEvent>(
+                        _loggerFactory.CreateLogger<RabbitMqSubscriber<CandlesUpdatedEvent>>(),
                         SubscriptionSettings)
                     .UseMiddleware(new ResilientErrorHandlingMiddleware<CandlesUpdatedEvent>(
                         _loggerFactory.CreateLogger<ResilientErrorHandlingMiddleware<CandlesUpdatedEvent>>(),

@@ -15,6 +15,7 @@ using Lykke.Job.CandlesHistoryWriter.Services.Settings;
 using Lykke.Job.CandlesHistoryWriter.Services.Workflow;
 using Lykke.Messaging.Serialization;
 using Lykke.Snow.Common.Correlation.Cqrs;
+using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Cqrs;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -59,13 +60,13 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 SerializationFormat.MessagePack,
                 environment: _settings.EnvironmentName);
             
-            var loggerFactory = ctx.Resolve<ILoggerFactory>();
+            var log = new LykkeLoggerAdapter<CqrsModule>(ctx.Resolve<ILogger<CqrsModule>>());
             
             var registrations = new List<IRegistration>
             {
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
-                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(loggerFactory)),
-                Register.EventInterceptors(new DefaultEventLoggingInterceptor(loggerFactory)),
+                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(log)),
+                Register.EventInterceptors(new DefaultEventLoggingInterceptor(log)),
                 RegisterContext(),
             };
             
@@ -74,7 +75,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
 
-            var engine = new RabbitMqCqrsEngine(loggerFactory,
+            var engine = new RabbitMqCqrsEngine(log,
                 ctx.Resolve<IDependencyResolver>(),
                 new DefaultEndpointProvider(),
                 rabbitMqSettings.Endpoint.ToString(),
