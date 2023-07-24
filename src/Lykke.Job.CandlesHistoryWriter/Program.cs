@@ -49,7 +49,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                             {
                                 // Set properties and call methods on options
                             })
-                            .UseUrls("http://*:5000")
+                            .UseUrls("http://*:5500")
                             .UseContentRoot(Directory.GetCurrentDirectory())
                             .UseStartup<Startup>();
                     })
