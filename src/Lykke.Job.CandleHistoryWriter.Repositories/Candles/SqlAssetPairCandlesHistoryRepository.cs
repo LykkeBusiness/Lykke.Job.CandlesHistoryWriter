@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlTypes;
 using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -81,10 +82,9 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
                 var transaction = conn.BeginTransaction();
                 try
                 {
-                    var timestamp = _systemClock.UtcNow.UtcDateTime;
                     var sql = $"IF EXISTS (SELECT * FROM {_tableName}" +
                         $" WHERE PriceType=@PriceType AND TimeStamp=@TimeStamp AND TimeInterval=@TimeInterval)" +
-                        $" BEGIN UPDATE {_tableName}  SET [Open]=@Open, [Close]=@Close, [High]=@High, [Low]=@Low, [TradingVolume]=@TradingVolume, [TradingOppositeVolume]=@TradingOppositeVolume, [LastTradePrice]=@LastTradePrice, [LastUpdateTimestamp]='{timestamp}'" +
+                        $" BEGIN UPDATE {_tableName}  SET [Open]=@Open, [Close]=@Close, [High]=@High, [Low]=@Low, [TradingVolume]=@TradingVolume, [TradingOppositeVolume]=@TradingOppositeVolume, [LastTradePrice]=@LastTradePrice, [LastUpdateTimestamp]=GETUTCDATE()" +
                         $" WHERE  PriceType=@PriceType AND TimeStamp=@TimeStamp AND TimeInterval=@TimeInterval END" +
                         " ELSE " +
                         $" BEGIN INSERT INTO {_tableName} ({GetColumns}) values ({GetFields}) END";
