@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
@@ -41,6 +42,10 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
             await repo.InsertOrMergeAsync(candles);
 
+            await _log.WriteInfoAsync(nameof(SqlCandlesHistoryRepository), 
+                nameof(InsertOrMergeAsync),
+                new { assetPairId, priceType, timeInterval }.ToJson(), 
+                $"Successfully persisted {candles.Count()} candles of {assetPairId} to SQL server");
         }
 
         public async Task<IEnumerable<ICandle>> GetCandlesAsync(string assetPairId, CandleTimeInterval interval,
