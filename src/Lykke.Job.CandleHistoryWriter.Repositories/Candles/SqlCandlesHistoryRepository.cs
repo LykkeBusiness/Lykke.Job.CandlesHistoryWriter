@@ -5,7 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -39,13 +39,18 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
         public async Task InsertOrMergeAsync(IEnumerable<ICandle> candles, string assetPairId, CandlePriceType priceType, CandleTimeInterval timeInterval)
         {
             var repo = GetRepo(assetPairId);
+            
+            await _log.WriteInfoAsync(nameof(SqlCandlesHistoryRepository),
+                nameof(InsertOrMergeAsync),
+                new { assetPairId, priceType, timeInterval }.ToJson(),
+                $"Persisting {candles.Count()} candles of {assetPairId} to SQL server, thread id: {Thread.CurrentThread.ManagedThreadId}");
 
             await repo.InsertOrMergeAsync(candles);
 
             await _log.WriteInfoAsync(nameof(SqlCandlesHistoryRepository), 
                 nameof(InsertOrMergeAsync),
                 new { assetPairId, priceType, timeInterval }.ToJson(), 
-                $"Successfully persisted {candles.Count()} candles of {assetPairId} to SQL server");
+                $"Successfully persisted {candles.Count()} candles of {assetPairId} to SQL server, thread id: {Thread.CurrentThread.ManagedThreadId}");
         }
 
         public async Task<IEnumerable<ICandle>> GetCandlesAsync(string assetPairId, CandleTimeInterval interval,
