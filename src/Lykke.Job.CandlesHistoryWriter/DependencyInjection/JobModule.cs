@@ -280,28 +280,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             builder.RegisterType<CandlesCacheInitalizationService>()
                 .As<ICandlesCacheInitalizationService>();
 
-            if (_settings.Db.StorageMode == StorageMode.SqlServer)
-            {
-                builder.Register<ICandlesPersistenceQueueSnapshotRepository>(ctx =>
-                        new SqlCandlesPersistenceQueueSnapshotRepository(_dbSettings.CurrentValue.SnapshotsConnectionString))
-                    .SingleInstance();
-
-                builder.RegisterType<SqlCandlesCleanup>()
-                    .WithParameter(TypedParameter.From(_settings.CleanupSettings))
-                    .WithParameter(TypedParameter.From(_settings.Db.SnapshotsConnectionString))
-                    .As<ICandlesCleanup>()
-                    .SingleInstance();
-            }
-            else if (_settings.Db.StorageMode == StorageMode.Azure)
-            {
-                builder.RegisterType<CandlesPersistenceQueueSnapshotRepository>()
-                    .As<ICandlesPersistenceQueueSnapshotRepository>()
-                    .WithParameter(TypedParameter.From(AzureBlobStorage.Create(_dbSettings.ConnectionString(x => x.SnapshotsConnectionString), TimeSpan.FromMinutes(10))));
-
-                builder.Register(ctx => Mock.Of<SqlCandlesCleanup>())
-                    .As<ICandlesCleanup>()
-                    .SingleInstance();
-            }
+            RegisterCandlesCleanup(builder);
 
             builder.RegisterType<RedisCacheTruncator>()
                 .As<IStartable>()
@@ -321,8 +300,6 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 
         private void RegisterCandlesMigration(ContainerBuilder builder)
         {
-
-
             if (_settings.Migration != null)
             {
                 if (!string.IsNullOrWhiteSpace(_dbSettings.CurrentValue.FeedHistoryConnectionString))
@@ -396,6 +373,40 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
         {
             builder.RegisterType<TProvider>()
                 .Named<IHistoryProvider>(typeof(TProvider).Name);
+        }
+
+        private void RegisterCandlesCleanup(ContainerBuilder builder)
+        {
+            if (_settings.Db.StorageMode == StorageMode.SqlServer)
+            {
+                builder.Register<ICandlesPersistenceQueueSnapshotRepository>(ctx =>
+                        new SqlCandlesPersistenceQueueSnapshotRepository(_dbSettings.CurrentValue.SnapshotsConnectionString))
+                    .SingleInstance();
+
+                builder.RegisterType<SqlCandlesCleanup>()
+                    .WithParameter(TypedParameter.From(_settings.CleanupSettings))
+                    .WithParameter(TypedParameter.From(_settings.Db.SnapshotsConnectionString))
+                    .As<ICandlesCleanup>()
+                    .SingleInstance();
+            }
+            else if (_settings.Db.StorageMode == StorageMode.Azure)
+            {
+                builder.RegisterType<CandlesPersistenceQueueSnapshotRepository>()
+                    .As<ICandlesPersistenceQueueSnapshotRepository>()
+                    .WithParameter(TypedParameter.From(AzureBlobStorage.Create(
+                        _dbSettings.ConnectionString(x => x.SnapshotsConnectionString), TimeSpan.FromMinutes(10))));
+
+                builder.Register(ctx => Mock.Of<SqlCandlesCleanup>())
+                    .As<ICandlesCleanup>()
+                    .SingleInstance();
+            }
+            builder.RegisterDecorator<CandlesCleanupTimer, ICandlesCleanup>();
+            builder.RegisterDecorator<CandlesCleanupFailureLogger, ICandlesCleanup>();
+            builder.RegisterDecorator<CandlesCleanupMultiRunGuard, ICandlesCleanup>();
+            builder.RegisterDecorator<ICandlesCleanup>(
+                (ctx, decoratee) =>
+                    new CandlesCleanupEnabledGuard(decoratee, _settings.CleanupSettings, ctx.Resolve<ILog>()),
+                fromKey: "CandlesCleanupMultiRunGuard");
         }
     }
 }

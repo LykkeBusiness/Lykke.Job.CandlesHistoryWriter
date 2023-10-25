@@ -3,10 +3,7 @@
 
 using System;
 using Microsoft.Data.SqlClient;
-using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
-using Common.Log;
 using Dapper;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain;
 using Lykke.Job.CandlesHistoryWriter.Core.Settings;
@@ -18,65 +15,35 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
         private readonly CleanupSettings _cleanupSettings;
         private readonly TimeSpan _effectiveTimeout;
         private readonly string _connectionString;
-        private readonly ILog _log;
-        private static int _inProgress;
         
         private const int DefaultTimeoutSeconds = 1 * 60 * 60;
+        private const string StoredProcFileName = "01_Candles.Cleanup.sql";
+        private const string StoredProcName = "Candles.Cleanup";
 
-        public SqlCandlesCleanup(CleanupSettings cleanupSettings, string connectionString, ILog log)
+        public SqlCandlesCleanup(CleanupSettings cleanupSettings, string connectionString)
         {
             _cleanupSettings = cleanupSettings ?? throw new ArgumentNullException(nameof(cleanupSettings));
             _connectionString = string.IsNullOrWhiteSpace(connectionString)
                 ? throw new ArgumentNullException(nameof(connectionString))
                 : connectionString;
-            _log = log ?? throw new ArgumentNullException(nameof(log));
             
             _effectiveTimeout = _cleanupSettings.Timeout ?? TimeSpan.FromSeconds(DefaultTimeoutSeconds);
         }
 
         public async Task Invoke()
         {
-            if (!_cleanupSettings.Enabled)
-            {
-                await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke),
-                    "Cleanup is disabled in settings, skipping.");
-                return;
-            }
-
-            if (1 == Interlocked.Exchange(ref _inProgress, 1))
-            {
-                await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke),
-                    "Cleanup is already in progress, skipping.");
-                return;
-            }
-            
-            try
-            {
-                await using var conn = new SqlConnection(_connectionString);
+            await using var conn = new SqlConnection(_connectionString);
                 
-                var procedureBody = "01_Candles.Cleanup.sql".GetFileContent();
-                await conn.ExecuteAsync(string.Format(procedureBody, _cleanupSettings.GetFormatParams()));
+            await EnsureStoredProcedureExists(conn);
 
-                await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke), "Starting candles cleanup.");
-                var sw = new Stopwatch();
-                sw.Start();
-
-                await conn.ExecuteAsync("EXEC Candles.Cleanup", 
-                    commandTimeout: (int)_effectiveTimeout.TotalSeconds);
-
-                await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke),
-                    $"Candles cleanup finished in {sw.Elapsed:G}.");
-
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(SqlCandlesCleanup), nameof(Invoke), null, ex);
-                throw;
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _inProgress, 0);
-            }
+            await conn.ExecuteAsync($"EXEC {StoredProcName}", 
+                commandTimeout: (int)_effectiveTimeout.TotalSeconds);
+        }
+        
+        private Task EnsureStoredProcedureExists(SqlConnection conn)
+        {
+            var spBody = StoredProcFileName.GetFileContent();
+            return conn.ExecuteAsync(string.Format(spBody, _cleanupSettings.GetFormatParams()));
         }
     }
 }
