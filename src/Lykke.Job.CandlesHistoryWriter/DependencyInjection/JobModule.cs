@@ -289,7 +289,8 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 builder.RegisterType<SqlCandlesCleanup>()
                     .WithParameter(TypedParameter.From(_settings.CleanupSettings))
                     .WithParameter(TypedParameter.From(_settings.Db.SnapshotsConnectionString))
-                    .As<ICandlesCleanup>();
+                    .As<ICandlesCleanup>()
+                    .SingleInstance();
             }
             else if (_settings.Db.StorageMode == StorageMode.Azure)
             {
@@ -297,7 +298,9 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                     .As<ICandlesPersistenceQueueSnapshotRepository>()
                     .WithParameter(TypedParameter.From(AzureBlobStorage.Create(_dbSettings.ConnectionString(x => x.SnapshotsConnectionString), TimeSpan.FromMinutes(10))));
 
-                builder.Register(ctx => Mock.Of<SqlCandlesCleanup>()).As<ICandlesCleanup>();
+                builder.Register(ctx => Mock.Of<SqlCandlesCleanup>())
+                    .As<ICandlesCleanup>()
+                    .SingleInstance();
             }
 
             builder.RegisterType<RedisCacheTruncator>()
