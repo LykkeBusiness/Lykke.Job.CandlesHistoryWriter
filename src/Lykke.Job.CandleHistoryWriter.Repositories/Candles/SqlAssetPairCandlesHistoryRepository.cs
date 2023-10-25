@@ -21,21 +21,23 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
     {
         private const int ReadCommandTimeout = 36000;
         private const int WriteCommandTimeout = 600;
-        private const string CreateTableScript = "CREATE TABLE {0}(" +
-                                                 "[Id] [bigint] NOT NULL IDENTITY(1,1) PRIMARY KEY," +
-                                                 "[AssetPairId] [nvarchar] (64) NOT NULL, " +
-                                                 "[PriceType] [int] NOT NULL ," +
-                                                 "[Open] [float] NOT NULL, " +
-                                                 "[Close] [float] NOT NULL, " +
-                                                 "[High] [float] NOT NULL, " +
-                                                 "[Low] [float] NOT NULL, " +
-                                                 "[TimeInterval] [int] NOT NULL, " +
-                                                 "[TradingVolume] [float] NOT NULL, " +
-                                                 "[TradingOppositeVolume] [float] NOT NULL, " +
-                                                 "[LastTradePrice] [float] NOT NULL, " +
-                                                 "[Timestamp] [datetime] NULL, " +
-                                                 "[LastUpdateTimestamp] [datetime] NULL" +
-                                                 ",INDEX IX_UNIQUEINDEX UNIQUE NONCLUSTERED (Timestamp, PriceType, TimeInterval));";
+        private const string CreateTableScript = @"
+CREATE TABLE {0}( 
+ [Id] [bigint] NOT NULL IDENTITY(1,1) PRIMARY KEY, 
+ [AssetPairId] [nvarchar] (64) NOT NULL,  
+ [PriceType] [int] NOT NULL, 
+ [Open] [float] NOT NULL,  
+ [Close] [float] NOT NULL,  
+ [High] [float] NOT NULL,  
+ [Low] [float] NOT NULL,  
+ [TimeInterval] [int] NOT NULL,  
+ [TradingVolume] [float] NOT NULL,  
+ [TradingOppositeVolume] [float] NOT NULL,  
+ [LastTradePrice] [float] NOT NULL,  
+ [Timestamp] [datetime] NULL,  
+ [LastUpdateTimestamp] [datetime] NULL 
+ ,INDEX IX_UNIQUEINDEX UNIQUE NONCLUSTERED (Timestamp, PriceType, TimeInterval),
+ ,INDEX IX_TABLEINDEX_TimeInterval NONCLUSTERED (TimeInterval));";
 
         private static Type DataType => typeof(ICandle);
         private static readonly string GetColumns = "[" + string.Join("],[", DataType.GetProperties().Select(x => x.Name)) + "]";
@@ -55,7 +57,9 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             var fixedAssetName = assetName.Replace("-", "_");
             var justTableName = $"candleshistory_{fixedAssetName}";
             _tableName = $"[{schemaName}].[{justTableName}]";
-            var createTableScript = CreateTableScript.Replace("UNIQUEINDEX", fixedAssetName);
+            var createTableScript = CreateTableScript
+                .Replace("UNIQUEINDEX", fixedAssetName)
+                .Replace("TABLEINDEX_TimeInterval", $"{fixedAssetName}_TimeInterval");
 
             using (var conn = new SqlConnection(_connectionString))
             {
