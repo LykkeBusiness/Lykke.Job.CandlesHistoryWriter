@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
@@ -32,5 +33,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Settings
             NumberOfTi1, NumberOfTi60, NumberOfTi300, NumberOfTi900, NumberOfTi1800, NumberOfTi3600, NumberOfTi7200,
             NumberOfTi21600, NumberOfTi43200, NumberOfTi86400, NumberOfTi604800, NumberOfTi3000000,
         }.Select(x => x == default ? NumberOfTiDefault: x).Cast<object>().ToArray();
+        
+        [Optional] public TimeSpan? Timeout { get; set; }
     }
 }
