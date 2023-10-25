@@ -43,17 +43,17 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
                 return;
             }
 
-            await using var conn = new SqlConnection(_connectionString);
-            
             if (1 == Interlocked.Exchange(ref _inProgress, 1))
             {
                 await _log.WriteInfoAsync(nameof(ICandlesCleanup), nameof(Invoke),
                     "Cleanup is already in progress, skipping.");
                 return;
             }
-                
+            
             try
             {
+                await using var conn = new SqlConnection(_connectionString);
+                
                 var procedureBody = "01_Candles.Cleanup.sql".GetFileContent();
                 await conn.ExecuteAsync(string.Format(procedureBody, _cleanupSettings.GetFormatParams()));
 
