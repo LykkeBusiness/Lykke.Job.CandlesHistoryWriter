@@ -36,7 +36,7 @@ CREATE TABLE {0}(
  [LastTradePrice] [float] NOT NULL,  
  [Timestamp] [datetime] NULL,  
  [LastUpdateTimestamp] [datetime] NULL 
- ,INDEX IX_UNIQUEINDEX UNIQUE NONCLUSTERED (Timestamp, PriceType, TimeInterval),
+ ,INDEX IX_UNIQUEINDEX UNIQUE NONCLUSTERED (Timestamp, PriceType, TimeInterval)
  ,INDEX IX_TABLEINDEX_TimeInterval NONCLUSTERED (TimeInterval));";
 
         private static Type DataType => typeof(ICandle);
