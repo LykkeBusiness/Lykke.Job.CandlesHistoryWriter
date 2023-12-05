@@ -36,8 +36,8 @@ CREATE TABLE {0}(
  [LastTradePrice] [float] NOT NULL,  
  [Timestamp] [datetime] NULL,  
  [LastUpdateTimestamp] [datetime] NULL 
- ,INDEX IX_UNIQUEINDEX UNIQUE NONCLUSTERED (Timestamp, PriceType, TimeInterval)
- ,INDEX IX_TABLEINDEX_TimeInterval NONCLUSTERED (TimeInterval));";
+ ,INDEX IX_{UNIQUEINDEX_PLACEHOLDER} UNIQUE NONCLUSTERED (Timestamp, PriceType, TimeInterval)
+ ,INDEX IX_{TABLEINDEX_TIMEINTERVAL_PLACEHOLDER} NONCLUSTERED (TimeInterval));";
 
         private static Type DataType => typeof(ICandle);
         private static readonly string GetColumns = "[" + string.Join("],[", DataType.GetProperties().Select(x => x.Name)) + "]";
@@ -58,8 +58,8 @@ CREATE TABLE {0}(
             var justTableName = $"candleshistory_{fixedAssetName}";
             _tableName = $"[{schemaName}].[{justTableName}]";
             var createTableScript = CreateTableScript
-                .Replace("UNIQUEINDEX", fixedAssetName)
-                .Replace("TABLEINDEX_TimeInterval", $"{fixedAssetName}_TimeInterval");
+                .Replace("{UNIQUEINDEX_PLACEHOLDER}", fixedAssetName)
+                .Replace("{TABLEINDEX_TIMEINTERVAL_PLACEHOLDER}", $"{fixedAssetName}_TimeInterval");
 
             using (var conn = new SqlConnection(_connectionString))
             {

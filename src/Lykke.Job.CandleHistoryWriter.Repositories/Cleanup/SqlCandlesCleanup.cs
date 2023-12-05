@@ -2,15 +2,17 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
 using Dapper;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain;
+using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesHistoryWriter.Core.Settings;
 
 namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
 {
-    public class SqlCandlesCleanup : ICandlesCleanup
+    public class SqlCandlesCleanup : ICandlesCleanup, INeedInitialization
     {
         private readonly CleanupSettings _cleanupSettings;
         private readonly TimeSpan _effectiveTimeout;
@@ -33,11 +35,20 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Cleanup
         public async Task Invoke()
         {
             await using var conn = new SqlConnection(_connectionString);
-                
-            await EnsureStoredProcedureExists(conn);
+            await using var command = conn.CreateCommand();
+            
+            command.CommandText = StoredProcName;
+            command.CommandType = CommandType.StoredProcedure;
+            command.CommandTimeout = (int)_effectiveTimeout.TotalSeconds;
+            
+            await conn.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
 
-            await conn.ExecuteAsync($"EXEC {StoredProcName}", 
-                commandTimeout: (int)_effectiveTimeout.TotalSeconds);
+        public async Task InitializeAsync()
+        {
+            await using var conn = new SqlConnection(_connectionString);
+            await EnsureStoredProcedureExists(conn);
         }
         
         private Task EnsureStoredProcedureExists(SqlConnection conn)

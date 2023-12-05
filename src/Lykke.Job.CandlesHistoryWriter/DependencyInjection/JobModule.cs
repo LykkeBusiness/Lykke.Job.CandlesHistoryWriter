@@ -386,7 +386,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 builder.RegisterType<SqlCandlesCleanup>()
                     .WithParameter(TypedParameter.From(_settings.CleanupSettings))
                     .WithParameter(TypedParameter.From(_settings.Db.SnapshotsConnectionString))
-                    .As<ICandlesCleanup>()
+                    .AsImplementedInterfaces()
                     .SingleInstance();
             }
             else if (_settings.Db.StorageMode == StorageMode.Azure)
