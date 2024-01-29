@@ -1,3 +1,8 @@
+## 2.7.0 - Nova 2. Delivery 39 (January 29, 2024)
+### What's changed
+* LT-5169: Add history of releases into `changelog.md`
+
+
 ## 2.6.0 - Nova 2. Delivery 38 (December 13, 2023)
 ### What's changed
 * LT-5056: Database blocked due to an active_transaction.
