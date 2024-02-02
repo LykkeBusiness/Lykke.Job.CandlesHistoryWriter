@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="1.5.2" />
     <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.5.0" />
-    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="11.12.2" />
     <PackageReference Include="LykkeBiz.SettingsReader" Version="6.0.4" />
     <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="1.2.0" />
     <PackageReference Include="morelinq" Version="3.3.2" />
