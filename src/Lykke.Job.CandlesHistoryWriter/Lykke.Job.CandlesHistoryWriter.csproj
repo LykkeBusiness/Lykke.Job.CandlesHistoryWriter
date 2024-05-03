@@ -47,9 +47,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Lykke.Job.CandleHistoryWriter.Repositories.csproj" />
+    <ProjectReference
+      Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Lykke.Job.CandleHistoryWriter.Repositories.csproj" />
     <ProjectReference Include="..\Lykke.Job.CandlesHistoryWriter.Core\Lykke.Job.CandlesHistoryWriter.Core.csproj" />
-    <ProjectReference Include="..\Lykke.Job.CandlesHistoryWriter.Services\Lykke.Job.CandlesHistoryWriter.Services.csproj" />
+    <ProjectReference
+      Include="..\Lykke.Job.CandlesHistoryWriter.Services\Lykke.Job.CandlesHistoryWriter.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,7 +61,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
+    <None Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Scripts\**" CopyToOutputDirectory="PreserveNewest"
+      LinkBase="Scripts" />
   </ItemGroup>
 
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
