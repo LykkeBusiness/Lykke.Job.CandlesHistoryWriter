@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -107,8 +108,9 @@ CREATE TABLE {0}(
                 }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync),
-                        $"Failed to insert or update a candle list", ex);
+                    var candlesJson = JsonSerializer.Serialize(candles);
+                    await _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync),
+                        $"Failed to insert or update a candle list with following candles {candlesJson}", ex);
                     transaction.Rollback();
                 }
             }
