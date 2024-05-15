@@ -20,7 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Lykke.Job.CandlesHistoryWriter.Services\Lykke.Job.CandlesHistoryWriter.Services.csproj" />
+    <ProjectReference
+      Include="..\..\src\Lykke.Job.CandlesHistoryWriter.Services\Lykke.Job.CandlesHistoryWriter.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
