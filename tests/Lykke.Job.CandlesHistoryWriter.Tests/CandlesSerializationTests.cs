@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using AutoFixture;
+using Lykke.Job.CandleHistoryWriter.Repositories;
 using Lykke.Job.CandleHistoryWriter.Repositories.Candles;
 using Lykke.Job.CandleHistoryWriter.Repositories.Snapshots;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
@@ -49,7 +50,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 testCandle,
             };
 
-            var json = JsonSerializer.Serialize(candles);
+            ExtendedJsonSerializer.TrySerialize(candles, out var json);
             var jsonArrayLength = JsonDocument.Parse(json).RootElement.GetArrayLength();
             Assert.AreEqual(candles.Count, jsonArrayLength);
         }

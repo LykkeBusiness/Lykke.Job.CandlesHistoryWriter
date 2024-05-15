@@ -108,9 +108,8 @@ CREATE TABLE {0}(
                 }
                 catch (Exception ex)
                 {
-                    var candlesJson = JsonSerializer.Serialize(candles);
-                    await _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync),
-                        $"Failed to insert or update a candle list with following candles {candlesJson}", ex);
+                    ExtendedJsonSerializer.TrySerialize(candles, out var  candlesJson);
+                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync), $"Failed to insert or update a candle list with following candles {candlesJson}", ex);
                     transaction.Rollback();
                 }
             }
