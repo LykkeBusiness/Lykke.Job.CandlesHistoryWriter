@@ -100,7 +100,7 @@ CREATE TABLE {0}(
                 }
                 catch (Exception ex)
                 {
-                    var errorMessage = $"Failed to insert or update a candle list with following assetIds: {string.Join(",",candles.Select(candle => candle.AssetPairId))}";
+                    var errorMessage = $"Failed to insert or update a candle list with following assetPairIds: {string.Join(",",candles.Select(candle => candle.AssetPairId))}";
                     _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync), errorMessage, ex);
                     transaction.Rollback();
                 }
