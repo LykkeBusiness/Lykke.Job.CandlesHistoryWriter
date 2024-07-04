@@ -137,6 +137,36 @@ CREATE TABLE {0}(
                 }
             }
         }
+        
+        public async Task<IEnumerable<ICandle>> GetCandlesAsync(DateTime from, DateTime to)
+        {
+            var whereClause =
+                "WHERE Timestamp >= @fromVar AND Timestamp <= @toVar";
+
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    var objects = await conn.QueryAsync<SqlCandleHistoryItem>($"SELECT * FROM {_tableName} {whereClause}",
+                        new { fromVar = from, toVar = to }, null, commandTimeout: ReadCommandTimeout);
+                    return objects;
+                }
+
+                catch (Exception ex)
+                {
+                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository),
+                        nameof(GetCandlesAsync),
+                        new
+                        {
+                            message = "Failed to get an candle list",
+                            from,
+                            to,
+                            _tableName
+                        }.ToJson(), ex);
+                    return Enumerable.Empty<ICandle>();
+                }
+            }
+        }
 
         public async Task<IEnumerable<ICandle>> GetLastCandlesAsync(CandlePriceType priceType, CandleTimeInterval interval, DateTime to, int number)
         {
