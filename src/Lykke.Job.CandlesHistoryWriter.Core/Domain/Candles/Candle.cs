@@ -20,6 +20,28 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles
         public double TradingOppositeVolume { get; }
         public double LastTradePrice { get; }
         public DateTime LastUpdateTimestamp { get; }
+        
+        public Candle UpdateRFactor(double rFactor)
+        {
+            if (rFactor <= 0)
+            {
+                throw new ArgumentException("R-factor should be greater than 0.");
+            }
+
+            return new Candle(
+                AssetPairId,
+                PriceType,
+                TimeInterval,
+                Timestamp,
+                Open * rFactor,
+                Close * rFactor,
+                High * rFactor,
+                Low * rFactor,
+                TradingVolume,
+                TradingOppositeVolume,
+                LastTradePrice,
+                LastUpdateTimestamp);
+        }
 
         private Candle(
             string assetPair,

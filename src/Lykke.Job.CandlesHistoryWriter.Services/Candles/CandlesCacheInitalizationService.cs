@@ -94,6 +94,16 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, "All candles history is cached");
         }
 
+        public async Task InitializeCacheAsync(string productId)
+        {
+            var assetPair = await _assetPairsManager.TryGetEnabledPairAsync(productId);
+            if (assetPair == null) return;
+    
+            var now = _clock.UtcNow;
+            
+            await CacheAssetPairCandlesAsync(assetPair, now);
+        }
+
         private async Task CacheAssetPairCandlesAsync(AssetPair assetPair, DateTime now)
         {
             if (!_candlesShardValidator.CanHandle(assetPair.Id))
