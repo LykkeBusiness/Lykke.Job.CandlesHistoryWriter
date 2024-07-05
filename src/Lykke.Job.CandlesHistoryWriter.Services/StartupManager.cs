@@ -91,7 +91,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting persistence manager...");
 
             _persistenceManager.Start();
-            
+
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cqrs engine ...");
 
             _cqrsEngine.StartAll();
