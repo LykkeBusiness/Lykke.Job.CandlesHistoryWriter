@@ -37,6 +37,8 @@ using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using Moq;
 using Lykke.Job.CandlesProducer.Contract;
+using Lykke.RabbitMqBroker;
+using Lykke.RabbitMqBroker.Subscriber;
 
 namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 {
@@ -51,6 +53,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
         private readonly ILog _log;
         private readonly MonitoringServiceClientSettings _monitoringServiceClient;
         private readonly CandlesShardRemoteSettings _candlesShardRemoteSettings;
+        private readonly RabbitMqSubscriptionSettings _subscriptionSettings;
 
         public JobModule(
             MarketType marketType,
@@ -71,6 +74,11 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             _dbSettings = dbSettings;
             _candlesShardRemoteSettings = candlesShardRemoteSettings;
             _log = log;
+            _subscriptionSettings = RabbitMqSubscriptionSettings
+                .CreateForSubscriber(_settings.Rabbit.CandlesSubscription.ConnectionString, 
+                    _settings.Rabbit.CandlesSubscription.Namespace,
+                    $"candles-v2.{_candlesShardRemoteSettings.Name}", 
+                    _settings.Rabbit.CandlesSubscription.Namespace, "candleshistory");
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -79,6 +87,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .As<ILog>()
                 .SingleInstance();
 
+            
             builder.RegisterType<Clock>().As<IClock>();
 
             if (_monitoringServiceClient != null)
@@ -95,7 +104,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 
             _services.AddSingleton<IRabbitPoisonHandingService<CandlesUpdatedEvent>>(provider => new RabbitPoisonHandingService<CandlesUpdatedEvent>(
                 provider.GetService<ILog>(),
-                provider.GetService<ICandlesSubscriber>().SubscriptionSettings));
+                _subscriptionSettings));
 
             builder.Populate(_services);
         }
@@ -239,12 +248,19 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                     .As<ICandlesChecker>()
                     .SingleInstance();
 
-            builder.RegisterType<CandlesSubscriber>()
-                .As<ICandlesSubscriber>()
-                .WithParameter(TypedParameter.From(_settings.Rabbit.CandlesSubscription))
-                .WithParameter(TypedParameter.From(_settings.Rabbit.Prefetch))
-                .SingleInstance();
-
+            builder.AddRabbitMqConnectionProvider();
+            
+            builder.AddRabbitMqListener<CandlesUpdatedEvent, CandlesUpdatesHandler>(
+                    _subscriptionSettings, (subscriber, context) =>
+                    {
+                        if (_settings.Rabbit.Prefetch.HasValue)
+                        {
+                            subscriber.SetPrefetchCount(_settings.Rabbit.Prefetch.Value);
+                        }
+                    })
+                .AddOptions(RabbitMqListenerOptions<CandlesUpdatedEvent>.MessagePack.NoLoss)
+                .AutoStart();
+            
             builder.RegisterType<CandlesManager>()
                 .As<ICandlesManager>()
                 .SingleInstance();
