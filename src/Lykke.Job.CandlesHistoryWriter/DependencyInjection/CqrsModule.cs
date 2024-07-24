@@ -48,6 +48,8 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
             builder.RegisterType<EodStartedProjection>().AsSelf();
+            builder.RegisterType<RFactorCommandsHandler>().AsSelf();
+
             builder.RegisterType<CqrsCorrelationManager>()
                 .AsSelf();
 
