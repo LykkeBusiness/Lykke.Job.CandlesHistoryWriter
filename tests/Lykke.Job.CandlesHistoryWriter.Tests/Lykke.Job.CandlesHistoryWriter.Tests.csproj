@@ -8,9 +8,6 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="AutoFixture" />
     <PackageReference Include="coverlet.collector">
       <PrivateAssets>all</PrivateAssets>
