@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,15 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="1.6.0" />
-    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.5.0" />
-    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
-    <PackageReference Include="LykkeBiz.SettingsReader" Version="8.1.2" />
-    <PackageReference Include="LykkeBiz.Snow.Cqrs" Version="1.2.0" />
-    <PackageReference Include="morelinq" Version="3.3.2" />
-    <PackageReference Include="Polly" Version="7.2.3" />
-    <PackageReference Include="StackExchange.Redis" Version="2.8.0" />
-    <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
+    <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" />
+    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" />
+    <PackageReference Include="LykkeBiz.SettingsReader" />
+    <PackageReference Include="LykkeBiz.Snow.Cqrs" />
+    <PackageReference Include="morelinq" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="System.Runtime.Extensions" />
   </ItemGroup>
 
   <ItemGroup>

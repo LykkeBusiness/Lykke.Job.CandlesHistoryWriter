@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -31,24 +31,23 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="LykkeBiz.Common.ApiLibrary" Version="5.0.0" />
-    <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="1.6.0" />
-    <PackageReference Include="Lykke.MarginTrading.CorporateActions.Broker.Contracts" Version="1.9.3" />
-    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.5.0" />
-    <PackageReference Include="Lykke.Service.Assets.Client" Version="4.7.0" />
-    <PackageReference Include="Lykke.Snow.Common.Startup" Version="3.12.0" />
-    <PackageReference Include="LykkeBiz.Common" Version="8.3.0" />
-    <PackageReference Include="LykkeBiz.HttpClientGenerator" Version="5.6.2" />
-    <PackageReference Include="LykkeBiz.Logs.MsSql" Version="3.1.0" />
-    <PackageReference Include="LykkeBiz.Logs.Serilog" Version="3.3.3" />
-    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
-    <PackageReference Include="LykkeBiz.SettingsReader" Version="8.1.2" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
-    <PackageReference Include="Moq" Version="4.17.2" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.7" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="LykkeBiz.Common.ApiLibrary" />
+    <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" />
+    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" />
+    <PackageReference Include="Lykke.Service.Assets.Client" />
+    <PackageReference Include="Lykke.Snow.Common.Startup" />
+    <PackageReference Include="LykkeBiz.Common" />
+    <PackageReference Include="LykkeBiz.HttpClientGenerator" />
+    <PackageReference Include="LykkeBiz.Logs.MsSql" />
+    <PackageReference Include="LykkeBiz.Logs.Serilog" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" />
+    <PackageReference Include="LykkeBiz.SettingsReader" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Lykke.Job.CandleHistoryWriter.Repositories.csproj" />
