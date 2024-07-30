@@ -24,7 +24,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{16E0B0C8-DF64-47BD-BC16-BE88605BBCAA}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		Performance1.psess = Performance1.psess
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		CHANGELOG.md = CHANGELOG.md
+		LICENSE = LICENSE
+		README.md = README.md
+		global.json = global.json
 	EndProjectSection
 EndProject
 Global
