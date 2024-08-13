@@ -7,27 +7,101 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Job.CandlesProducer.Contract;
+using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
+using Lykke.Job.CandlesHistoryWriter.Services.Settings;
+using Lykke.RabbitMqBroker.Subscriber.Deserializers;
+using Lykke.RabbitMqBroker.Subscriber.MessageReadStrategies;
+using Lykke.RabbitMqBroker.Subscriber.Middleware.ErrorHandling;
+using Microsoft.Extensions.Logging;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
-    public class CandlesUpdatesHandler : IMessageHandler<CandlesUpdatedEvent>
+    [UsedImplicitly(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
+    public class CandlesSubscriber : ICandlesSubscriber
     {
         private readonly ILog _log;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ICandlesManager _candlesManager;
         private readonly ICandlesChecker _candlesChecker;
+        private readonly RabbitEndpointSettings _settings;
+        private readonly ushort _prefetch;
+        private readonly string _shardName;
 
-        public CandlesUpdatesHandler(ILog log, ICandlesManager candlesManager, ICandlesChecker candlesChecker)
+        private RabbitMqSubscriber<CandlesUpdatedEvent> _subscriber;
+
+        private const int DefaultPrefetch = 100;
+        
+        public CandlesSubscriber(ILog log,
+            ILoggerFactory loggerFactory,
+            ICandlesManager candlesManager,
+            ICandlesChecker checker,
+            RabbitEndpointSettings settings,
+            CandlesShardRemoteSettings candlesShardRemoteSettings,
+            ushort? prefetch)
         {
             _log = log;
+            _loggerFactory = loggerFactory;
             _candlesManager = candlesManager;
-            _candlesChecker = candlesChecker;
+            _candlesChecker = checker;
+            _settings = settings;
+            _prefetch = prefetch ?? DefaultPrefetch;
+            _shardName = candlesShardRemoteSettings.Name;
         }
 
-        public async Task Handle(CandlesUpdatedEvent candlesUpdate)
+        private RabbitMqSubscriptionSettings _subscriptionSettings;
+
+        public RabbitMqSubscriptionSettings SubscriptionSettings
+        {
+            get
+            {
+                if (_subscriptionSettings == null)
+                {
+                    _subscriptionSettings = RabbitMqSubscriptionSettings
+                        .CreateForSubscriber(_settings.ConnectionString, _settings.Namespace,
+                            $"candles-v2.{_shardName}", _settings.Namespace, "candleshistory")
+                        .MakeDurable();
+                }
+
+                return _subscriptionSettings;
+            }
+        }
+
+        public void Start()
+        {
+            try
+            {
+                _subscriber = new RabbitMqSubscriber<CandlesUpdatedEvent>(
+                        _loggerFactory.CreateLogger<RabbitMqSubscriber<CandlesUpdatedEvent>>(),
+                        SubscriptionSettings)
+                    .UseMiddleware(new ResilientErrorHandlingMiddleware<CandlesUpdatedEvent>(
+                        _loggerFactory.CreateLogger<ResilientErrorHandlingMiddleware<CandlesUpdatedEvent>>(),
+                        TimeSpan.FromSeconds(10),
+                        10))
+                    .SetMessageDeserializer(new MessagePackMessageDeserializer<CandlesUpdatedEvent>())
+                    .SetMessageReadStrategy(new MessageReadQueueStrategy())
+                    .SetPrefetchCount(_prefetch)
+                    .Subscribe(ProcessCandlesUpdatedEventAsync)
+                    .CreateDefaultBinding()
+                    .Start();
+            }
+            catch (Exception ex)
+            {
+                _log.WriteErrorAsync(nameof(CandlesSubscriber), nameof(Start), null, ex).Wait();
+                throw;
+            }
+        }
+
+        public void Stop()
+        {
+            _subscriber?.Stop();
+        }
+
+        private async Task ProcessCandlesUpdatedEventAsync(CandlesUpdatedEvent candlesUpdate)
         {
             try
             {
@@ -35,7 +109,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 if (validationErrors.Any())
                 {
                     var message = string.Join("\r\n", validationErrors);
-                    await _log.WriteWarningAsync(nameof(CandlesUpdatesHandler), nameof(CandlesUpdatedEvent),
+                    await _log.WriteWarningAsync(nameof(CandlesSubscriber), nameof(CandlesUpdatedEvent),
                         candlesUpdate.ToJson(), message);
 
                     return;
@@ -64,8 +138,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
             catch (Exception)
             {
-                await _log.WriteWarningAsync(nameof(CandlesUpdatesHandler),
-                    nameof(IMessageHandler<CandlesUpdatedEvent>),
+                await _log.WriteWarningAsync(nameof(CandlesSubscriber), nameof(ProcessCandlesUpdatedEventAsync),
                     candlesUpdate.ToJson(), "Failed to process candle");
                 throw;
             }
@@ -132,6 +205,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
 
             return errors;
+        }
+
+        public void Dispose()
+        {
+            Stop();
         }
     }
 }
