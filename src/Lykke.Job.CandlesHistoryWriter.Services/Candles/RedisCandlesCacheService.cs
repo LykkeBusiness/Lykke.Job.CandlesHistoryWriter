@@ -16,6 +16,8 @@ using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using MoreLinq;
 using StackExchange.Redis;
+using Common.Log;
+using System.Threading;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
@@ -30,12 +32,14 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         private readonly IHealthService _healthService;
         private readonly MarketType _market;
         private readonly IConnectionMultiplexer _redis;
+        private readonly ILog _log;
 
-        public RedisCandlesCacheService(IHealthService healthService, MarketType market, IConnectionMultiplexer redis)
+        public RedisCandlesCacheService(IHealthService healthService, MarketType market, IConnectionMultiplexer redis, ILog log)
         {
             _healthService = healthService;
             _market = market;
             _redis = redis;
+            _log = log;
         }
 
         public IImmutableDictionary<string, IImmutableList<ICandle>> GetState()
@@ -95,6 +99,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
         public async Task CacheAsync(IReadOnlyList<ICandle> candles)
         {
+            await _log.WriteWarningAsync(
+                nameof(RedisCandlesCacheService),
+                nameof(CacheAsync),
+                new { ThreadId = Thread.CurrentThread.ManagedThreadId, CandlesCount = candles.Count }.ToJson(),
+                $"Calling {nameof(_healthService.TraceStartCacheCandles)}");
+
             _healthService.TraceStartCacheCandles();
 
             // Transaction is needed here, despite of this method is non concurrent-safe,
@@ -130,6 +140,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             // saves tasks and waits they here, just to calm down the Resharper
 
             await Task.WhenAll(tasks);
+
+            await _log.WriteWarningAsync(
+                nameof(RedisCandlesCacheService),
+                nameof(CacheAsync),
+                new { ThreadId = Thread.CurrentThread.ManagedThreadId, CandlesCount = candles.Count }.ToJson(),
+                $"Calling {nameof(_healthService.TraceStopCacheCandles)}");
 
             _healthService.TraceStopCacheCandles(candles.Count);
         }
