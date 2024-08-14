@@ -125,7 +125,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .ListeningCommands(
                     typeof(UpdateHistoricalCandlesCommand)
                 )
-                .On(CommandsRoute)
+                .On(DefaultRoute)
                 .WithCommandsHandler<RFactorCommandsHandler>()
                 .PublishingEvents(
                     typeof(HistoricalCandlesUpdatedEvent)

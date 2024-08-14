@@ -104,8 +104,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cqrs engine ...");
 
-            _cqrsEngine.StartPublishers();
-            _cqrsEngine.StartSubscribers();
+            _cqrsEngine.StartAll();
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Started up");
 
