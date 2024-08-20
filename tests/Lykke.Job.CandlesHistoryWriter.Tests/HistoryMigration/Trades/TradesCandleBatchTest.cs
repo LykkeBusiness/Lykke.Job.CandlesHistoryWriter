@@ -325,6 +325,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.HistoryMigration.Trades
             throw new NotImplementedException();
         }
 
+        public Task<IEnumerable<ICandle>> GetCandlesAsync(string assetPairId, DateTime from, DateTime to)
+        {
+            throw new NotImplementedException();
+        }
+
         public IReadOnlyList<string> GetStoredAssetPairs()
         {
             throw new NotImplementedException();

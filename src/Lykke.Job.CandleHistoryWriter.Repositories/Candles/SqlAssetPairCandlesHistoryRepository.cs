@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -99,8 +100,8 @@ CREATE TABLE {0}(
                 }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync),
-                        $"Failed to insert or update a candle list", ex);
+                    var errorMessage = $"Failed to insert or update a candle list with following assetPairIds: {string.Join(",",candles.Select(candle => candle.AssetPairId))}";
+                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync), errorMessage, ex);
                     transaction.Rollback();
                 }
             }
@@ -129,6 +130,36 @@ CREATE TABLE {0}(
                             message = "Failed to get an candle list",
                             priceType,
                             interval,
+                            to,
+                            _tableName
+                        }.ToJson(), ex);
+                    return Enumerable.Empty<ICandle>();
+                }
+            }
+        }
+        
+        public async Task<IEnumerable<ICandle>> GetCandlesAsync(DateTime from, DateTime to)
+        {
+            var whereClause =
+                "WHERE Timestamp >= @fromVar AND Timestamp <= @toVar";
+
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    var objects = await conn.QueryAsync<SqlCandleHistoryItem>($"SELECT * FROM {_tableName} {whereClause}",
+                        new { fromVar = from, toVar = to }, null, commandTimeout: ReadCommandTimeout);
+                    return objects;
+                }
+
+                catch (Exception ex)
+                {
+                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository),
+                        nameof(GetCandlesAsync),
+                        new
+                        {
+                            message = "Failed to get an candle list",
+                            from,
                             to,
                             _tableName
                         }.ToJson(), ex);

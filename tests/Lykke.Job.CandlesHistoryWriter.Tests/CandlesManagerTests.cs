@@ -67,7 +67,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
             _cacheServiceMock.Verify(s => s.CacheAsync(It.IsAny<IReadOnlyList<ICandle>>()), Times.Once);
             _persistenceQueueMock.Verify(s => s.EnqueueCandle(It.IsAny<ICandle>()), Times.Exactly(2));
         }
-
         #endregion
         
     }

@@ -11,5 +11,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Services.Candles
     public interface ICandlesCacheInitalizationService
     {
         Task InitializeCacheAsync();
+        Task InitializeCacheAsync(string productId);
     }
 }
