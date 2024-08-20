@@ -10,6 +10,7 @@ using Lykke.Cqrs;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
+using Lykke.Job.CandlesHistoryWriter.Services.Candles;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services
 {
@@ -26,6 +27,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
         private readonly bool _migrationEnabled;
         private readonly ICqrsEngine _cqrsEngine;
         private readonly IEnumerable<INeedInitialization> _needInitializations;
+        private readonly RedisCacheTruncator _redisCacheTruncator;
 
         public StartupManager(
             ILog log,
@@ -37,7 +39,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             ICandlesPersistenceManager persistenceManager,
             bool migrationEnabled,
             ICqrsEngine cqrsEngine,
-            IEnumerable<INeedInitialization> needInitializations)
+            IEnumerable<INeedInitialization> needInitializations,
+            RedisCacheTruncator redisCacheTruncator)
         {
             if (log == null)
                 throw new ArgumentNullException(nameof(log));
@@ -56,6 +59,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             _migrationEnabled = migrationEnabled;
             _cqrsEngine = cqrsEngine ?? throw new ArgumentNullException(nameof(cqrsEngine));
             _needInitializations = needInitializations;
+            _redisCacheTruncator = redisCacheTruncator;
         }
 
         public async Task StartAsync()
@@ -77,6 +81,10 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Waiting for async tasks...");
 
             await Task.WhenAll(tasks);
+
+            await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cache truncator...");
+
+            _redisCacheTruncator.Start();
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting persistence queue...");
 

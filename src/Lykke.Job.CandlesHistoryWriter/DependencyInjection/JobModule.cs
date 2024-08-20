@@ -171,7 +171,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             builder.RegisterInstance(_candlesShardRemoteSettings)
                 .AsSelf()
                 .SingleInstance();
-            
+
             builder.RegisterType<HealthService>()
                 .As<IHealthService>()
                 .SingleInstance();
@@ -283,11 +283,10 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             RegisterCandlesCleanup(builder);
 
             builder.RegisterType<RedisCacheTruncator>()
-                .As<IStartable>()
+                .AsSelf()
                 .SingleInstance()
                 .WithParameter(TypedParameter.From(_marketType))
-                .WithParameter(TypedParameter.From(_settings.CacheCleanupPeriod))
-                .AutoActivate();
+                .WithParameter(TypedParameter.From(_settings.CacheCleanupPeriod));
 
             builder.RegisterType<CandlesShardValidator>()
                 .As<ICandlesShardValidator>()
