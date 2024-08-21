@@ -10,17 +10,17 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
 {
     [UsedImplicitly]
     public class CandlesHistoryWriterSettings
-    {        
+    {
         public AssetsCacheSettings AssetsCache { get; set; }
-        
+
         public RabbitSettings Rabbit { get; set; }
-        
+
         public QueueMonitorSettings QueueMonitor { get; set; }
-        
+
         public PersistenceSettings Persistence { get; set; }
-        
+
         public DbSettings Db { get; set; }
-      
+
         [Optional, CanBeNull]
         public MigrationSettings Migration { get; set; }
 
@@ -30,14 +30,20 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
         public ResourceMonitorSettings ResourceMonitor { get; set; }
 
         public int HistoryTicksCacheSize { get; set; }
-        
+
         public TimeSpan CacheCleanupPeriod { get; set; }
-        
+
+        /// <summary>
+        /// The size of the asset pairs batch when caching candles
+        /// </summary>
+        [Optional]
+        public int? CacheCandlesAssetsBatchSize { get; set; }
+
         [Optional]
         public bool UseSerilog { get; set; }
 
         public CqrsSettings Cqrs { get; set; }
-        
+
         [Optional]
         public CleanupSettings CleanupSettings { get; set; } = new CleanupSettings();
     }
