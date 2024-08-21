@@ -278,7 +278,9 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .AutoActivate();
 
             builder.RegisterType<CandlesCacheInitalizationService>()
-                .As<ICandlesCacheInitalizationService>();
+                .As<ICandlesCacheInitalizationService>()
+                .WithParameter(TypedParameter.From(_settings.CacheCandlesAssetsBatchSize))
+                .SingleInstance();
 
             RegisterCandlesCleanup(builder);
 

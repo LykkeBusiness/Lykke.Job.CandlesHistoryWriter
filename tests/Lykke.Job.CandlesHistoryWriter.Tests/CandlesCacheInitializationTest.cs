@@ -83,7 +83,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 _cacheServiceMock.Object,
                 _historyRepositoryMock.Object,
                 _candlesAmountManagerMock.Object,
-                _candlesShardValidator.Object);
+                _candlesShardValidator.Object,
+                null);
         }
 
         [TestMethod]
@@ -95,12 +96,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
             _dateTimeProviderMock.SetupGet(p => p.UtcNow).Returns(now);
             _historyRepositoryMock
                 .Setup(r => r.GetLastCandlesAsync(
-                    It.IsAny<string>(), 
-                    It.IsAny<CandleTimeInterval>(), 
-                    It.IsAny<CandlePriceType>(), 
-                    It.IsAny<DateTime>(), 
+                    It.IsAny<string>(),
+                    It.IsAny<CandleTimeInterval>(),
+                    It.IsAny<CandlePriceType>(),
+                    It.IsAny<DateTime>(),
                     It.IsAny<int>()))
-                .ReturnsAsync((string a, CandleTimeInterval i, CandlePriceType p, DateTime t, int n) => 
+                .ReturnsAsync((string a, CandleTimeInterval i, CandlePriceType p, DateTime t, int n) =>
                     new[]
                     {
                         new TestCandle(),

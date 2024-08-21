@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Lykke.Job.CandlesProducer.Contract;
 using Lykke.Service.Assets.Client.Models;
@@ -24,6 +25,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         private readonly ICandlesHistoryRepository _candlesHistoryRepository;
         private readonly ICandlesAmountManager _candlesAmountManager;
         private readonly ICandlesShardValidator _candlesShardValidator;
+        private readonly int _cacheCandlesAssetsBatchSize;
+
+        private const int DefaultCacheCandlesAssetsBatchSize = 100;
 
         public CandlesCacheInitalizationService(
             ILog log,
@@ -31,8 +35,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             IClock clock,
             ICandlesCacheService candlesCacheService,
             ICandlesHistoryRepository candlesHistoryRepository,
-            ICandlesAmountManager candlesAmountManager, 
-            ICandlesShardValidator candlesShardValidator)
+            ICandlesAmountManager candlesAmountManager,
+            ICandlesShardValidator candlesShardValidator,
+            int? configuredCacheCandlesAssetsBatchSize)
         {
             _log = log;
             _assetPairsManager = assetPairsManager;
@@ -41,6 +46,37 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             _candlesHistoryRepository = candlesHistoryRepository;
             _candlesAmountManager = candlesAmountManager;
             _candlesShardValidator = candlesShardValidator;
+            _cacheCandlesAssetsBatchSize = GetActualCacheCandlesAssetsBatchSize(configuredCacheCandlesAssetsBatchSize);
+
+            if (_cacheCandlesAssetsBatchSize <= 10)
+            {
+                _log.WriteWarning(nameof(CandlesCacheInitalizationService),
+                    new { ConfiguredCacheCandlesAssetsBatchSize = _cacheCandlesAssetsBatchSize }.ToJson(),
+                    "Configured cache candles assets batch size is too low. " +
+                    "It may lead to performance issues. " +
+                    "Please consider increasing it.");
+            }
+
+            if (_cacheCandlesAssetsBatchSize != configuredCacheCandlesAssetsBatchSize)
+            {
+                _log.WriteWarning(nameof(CandlesCacheInitalizationService),
+                    new
+                    {
+                        ConfiguredCacheCandlesAssetsBatchSize = configuredCacheCandlesAssetsBatchSize,
+                        ActualCacheCandlesAssetsBatchSize = _cacheCandlesAssetsBatchSize
+                    }.ToJson(),
+                    "Configured cache candles assets batch size is invalid. " +
+                    "Using default value instead.");
+            }
+        }
+
+        private static int GetActualCacheCandlesAssetsBatchSize(int? configuredCacheCandlesAssetsBatchSize)
+        {
+            return configuredCacheCandlesAssetsBatchSize.HasValue
+                ? configuredCacheCandlesAssetsBatchSize.Value <= 0
+                    ? DefaultCacheCandlesAssetsBatchSize
+                    : configuredCacheCandlesAssetsBatchSize.Value
+                : DefaultCacheCandlesAssetsBatchSize;
         }
 
         public async Task InitializeCacheAsync()
@@ -50,7 +86,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             var assetPairs = await _assetPairsManager.GetAllEnabledAsync();
             var now = _clock.UtcNow;
 
-            foreach (var cacheAssetPairBatch in assetPairs.Batch(10))
+            foreach (var cacheAssetPairBatch in assetPairs.Batch(_cacheCandlesAssetsBatchSize))
             {
                 await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair, now)));
             }
@@ -64,10 +100,10 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             {
                 await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null,
                     $"Skipping {assetPair.Id} caching, since it doesn't meet sharding condition");
-                
+
                 return;
             }
-            
+
             await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, $"Caching {assetPair.Id} candles history...");
 
             try
