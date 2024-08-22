@@ -28,7 +28,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             MarketType market,
             TimeSpan cacheCleanupPeriod,
             ICandlesAmountManager candlesAmountManager,
-            ILog log, 
+            ILog log,
             ICandlesShardValidator candlesShardValidator,
             IConnectionMultiplexer redis)
             : base(nameof(RedisCacheTruncator), (int)cacheCleanupPeriod.TotalMilliseconds, log)
@@ -56,8 +56,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                         var key = RedisCandlesCacheService.GetKey(_market, assetId, priceType, timeInterval);
 
                         var candlesAmountToStore = _candlesAmountManager.GetCandlesAmountToStore(timeInterval);
-                        
-                        db.SortedSetRemoveRangeByRank(key, 0, -candlesAmountToStore - 1, CommandFlags.FireAndForget);
+
+                        await db.SortedSetRemoveRangeByRankAsync(key, 0, -candlesAmountToStore - 1, CommandFlags.FireAndForget);
                     }
                 }
             }
