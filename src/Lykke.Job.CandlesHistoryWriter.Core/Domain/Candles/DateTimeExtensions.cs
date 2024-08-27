@@ -43,5 +43,28 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles
                     throw new ArgumentOutOfRangeException(nameof(interval), interval, "Unexpected TimeInterval value.");
             }
         }
+
+        public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek)
+        {
+            var diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
+        }
+
+        public static DateTime StartOfMonth(this DateTime date)
+        {
+            return new DateTime(date.Year, date.Month, 1, 0, 0, 0);
+        }
+
+        public static bool SameMonth(this DateTime date1, DateTime date2)
+        {
+            return date1.Month == date2.Month;
+        }
+
+        public static bool SameWeek(this DateTime date1, DateTime date2, DayOfWeek startOfWeek)
+        {
+            var startOfWeek1 = StartOfWeek(date1, startOfWeek);
+            var startOfWeek2 = StartOfWeek(date2, startOfWeek);
+            return startOfWeek1 == startOfWeek2;
+        }
     }
 }

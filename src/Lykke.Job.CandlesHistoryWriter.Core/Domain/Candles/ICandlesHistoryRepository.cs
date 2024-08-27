@@ -17,5 +17,10 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles
         Task<ICandle> TryGetFirstCandleAsync(string assetPairId, CandleTimeInterval interval, CandlePriceType priceType);
         Task<int> DeleteCandlesAsync(IReadOnlyList<ICandle> candlesToDelete);
         Task<int> ReplaceCandlesAsync(IReadOnlyList<ICandle> candlesToReplace);
+
+        Task ApplyRFactor(string productId, 
+            decimal rFactor, 
+            DateTime rFactorDate,
+            DateTime lastTradingDay);
     }
 }

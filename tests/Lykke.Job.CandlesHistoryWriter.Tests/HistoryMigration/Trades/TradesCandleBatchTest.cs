@@ -308,6 +308,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.HistoryMigration.Trades
             return 0;
         }
 
+        public Task ApplyRFactor(string productId, decimal rFactor, DateTime rFactorDate, DateTime lastTradingDay)
+        {
+            throw new NotImplementedException();
+        }
+
         #region NotImplemented"
 
         public bool CanStoreAssetPair(string assetPairId)
