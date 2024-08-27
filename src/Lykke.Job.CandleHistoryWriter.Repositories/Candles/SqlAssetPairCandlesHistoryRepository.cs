@@ -397,9 +397,10 @@ where 1=1
 
         private async Task UpdateShortLivedCandles(UpdateShortLivedCandlesCommand command, SqlConnection conn, SqlTransaction tran)
         {
-            var sql = $"update {_tableName} " +
-                      $"set High *= @rFactor, Low *= @rFactor, [Open] *= @rFactor, [Close] *= @rFactor" +
-                      $"where [Timestamp] <= @rFactorDate and TimeInterval < {(int)CandleTimeInterval.Week}";
+            var sql =
+                @$"update {_tableName} 
+                set High *= @rFactor, Low *= @rFactor, [Open] *= @rFactor, [Close] *= @rFactor
+                where [Timestamp] <= @rFactorDate and TimeInterval < {(int)CandleTimeInterval.Week}";
 
             await conn.ExecuteAsync(sql, new { rFactor = command.RFactor, rFactorDate = command.RFactorDate }, tran);
         }
