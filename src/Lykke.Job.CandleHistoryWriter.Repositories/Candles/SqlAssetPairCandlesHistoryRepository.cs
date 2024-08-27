@@ -287,6 +287,7 @@ CREATE TABLE {0}(
         public async Task ApplyRFactor(List<UpdateCandlesCommand> commands)
         {
             await using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
             await using var tran = conn.BeginTransaction();
             try
             {
