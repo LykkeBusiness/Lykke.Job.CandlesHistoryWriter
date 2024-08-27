@@ -321,6 +321,7 @@ CREATE TABLE {0}(
                     new { message = "Failed to update candles", _tableName }.ToJson(), ex);
 
                 tran.Rollback();
+                throw;
             }
         }
 
