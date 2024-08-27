@@ -72,7 +72,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             var backupTableName = $"{sourceTableName}{suffix}";
 
             var fullSourceTableName = $"[{SchemaName}].[{sourceTableName}]";
-            var fullBackupTableName = $"{fullSourceTableName}{suffix}";
+            var fullBackupTableName = $"[{SchemaName}].[{sourceTableName}{suffix}]";
 
             await using var conn = new SqlConnection(_connectionString);
             try
