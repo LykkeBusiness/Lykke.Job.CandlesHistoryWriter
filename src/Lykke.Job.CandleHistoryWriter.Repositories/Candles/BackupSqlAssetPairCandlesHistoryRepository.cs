@@ -38,6 +38,12 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             INSERT INTO {0}
             SELECT * FROM {1}";
 
+        private const string TruncateTableScript = @"
+            truncate table {0};
+        ";
+
+        private const string Suffix = "_backup";
+
         public BackupSqlAssetPairCandlesHistoryRepository(string assetName,
             string connectionString,
             ILogger<BackupSqlAssetPairCandlesHistoryRepository> logger)
@@ -49,11 +55,10 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
         public async Task CopyData(string sourceTableName, string backupTableName)
         {
-            await using var conn = new SqlConnection(_connectionString);
-
             var script = string.Format(CopyDataScript, backupTableName, sourceTableName);
             try
             {
+                await using var conn = new SqlConnection(_connectionString);
                 await conn.ExecuteAsync(script);
             }
             catch (Exception e)
@@ -63,20 +68,40 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             }
         }
 
+        public async Task Truncate(string table)
+        {
+            if (!table.Contains(Suffix))
+            {
+                _logger.LogError("Cannot truncate non-backup table {Table}", table);
+                return;
+            }
+
+            var script = string.Format(TruncateTableScript, table);
+            try
+            {
+                await using var conn = new SqlConnection(_connectionString);
+                await conn.ExecuteAsync(script);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Could not truncate backup table {TableName}", table);
+                throw;
+            }
+        }
+
         public async Task<(string sourceTableName, string backupTableName)> CreateTable()
         {
             var fixedAssetName = _assetName.Replace("-", "_");
-            var suffix = "_backup";
 
             var sourceTableName = $"candleshistory_{fixedAssetName}";
-            var backupTableName = $"{sourceTableName}{suffix}";
+            var backupTableName = $"{sourceTableName}{Suffix}";
 
             var fullSourceTableName = $"[{SchemaName}].[{sourceTableName}]";
-            var fullBackupTableName = $"[{SchemaName}].[{sourceTableName}{suffix}]";
+            var fullBackupTableName = $"[{SchemaName}].[{sourceTableName}{Suffix}]";
 
-            await using var conn = new SqlConnection(_connectionString);
             try
             {
+                await using var conn = new SqlConnection(_connectionString);
                 conn.CreateTableIfDoesntExists(CreateTableScript, backupTableName, SchemaName);
             }
             catch (Exception e)
