@@ -187,6 +187,11 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                     .As<ICandlesHistoryRepository>()
                     .WithParameter(TypedParameter.From(_dbSettings.Nested(s => s.SnapshotsConnectionString)))
                     .SingleInstance();
+                
+                builder.RegisterType<CandlesHistoryBackupService>()
+                    .As<ICandlesHistoryBackupService>()
+                    .WithParameter(TypedParameter.From(_dbSettings.Nested(s => s.SnapshotsConnectionString)))
+                    .SingleInstance();
             }
             else if (_settings.Db.StorageMode == StorageMode.Azure)
             {

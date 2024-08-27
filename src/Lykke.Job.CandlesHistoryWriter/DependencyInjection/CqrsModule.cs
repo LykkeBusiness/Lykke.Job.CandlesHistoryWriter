@@ -123,12 +123,16 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
         {
             contextRegistration
                 .ListeningCommands(
-                    typeof(UpdateHistoricalCandlesCommand)
+                    typeof(BackupHistoricalCandlesCommand),
+                    typeof(UpdateHistoricalCandlesCommand),
+                    typeof(UpdateCandlesCacheCommand)
                 )
                 .On(DefaultRoute)
                 .WithCommandsHandler<RFactorCommandsHandler>()
                 .PublishingEvents(
-                    typeof(HistoricalCandlesUpdatedEvent)
+                    typeof(BackupHistoricalCandlesFinishedEvent),
+                    typeof(HistoricalCandlesUpdatedEvent),
+                    typeof(CandlesCacheUpdatedEvent)
                 )
                 .With(EventsRoute);
         }

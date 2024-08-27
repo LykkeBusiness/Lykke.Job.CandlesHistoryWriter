@@ -141,6 +141,11 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             }
         }
 
+        public Task ApplyRFactor(string productId, decimal rFactor, DateTime rFactorDate, DateTime lastTradingDay)
+        {
+            throw new NotImplementedException();
+        }
+
         private (string assetPairId, CandleTimeInterval interval, CandlePriceType priceType) PreEvaluateInputCandleSet(
             IEnumerable<ICandle> candlesToCheck)
         {
