@@ -347,7 +347,7 @@ set
     [Close] = (case 
             when CONVERT(date, LastUpdateTimestamp) = CONVERT(date, @rFactorDate) then [Close] * @rFactor
             else [Close]
-            end), 
+            end) 
 where 1=1
         and LastUpdateTimestamp > @rFactorDate
         and [Timestamp] <= @rFactorDate
