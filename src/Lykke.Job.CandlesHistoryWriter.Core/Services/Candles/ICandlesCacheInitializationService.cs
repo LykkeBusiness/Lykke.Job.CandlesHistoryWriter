@@ -8,7 +8,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Services.Candles
     /// <summary>
     /// Initializes cache from the history storage
     /// </summary>
-    public interface ICandlesCacheInitalizationService
+    public interface ICandlesCacheInitializationService
     {
         Task InitializeCacheAsync();
         Task InitializeCacheAsync(string productId);

@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using Lykke.Cqrs;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
+using Lykke.Job.CandlesHistoryWriter.Services;
 using Lykke.Job.CandlesProducer.Contract;
 using Microsoft.Extensions.Logging;
 
@@ -18,74 +19,59 @@ namespace Lykke.Job.CandlesHistoryWriter.Workflow
     public class RFactorCommandsHandler
     {
         private readonly ICandlesHistoryRepository _candlesHistoryRepository;
-        private readonly ICandlesManager _candlesManager;
+        private readonly ICandlesCacheInitializationService _candlesCacheInitializationService;
+        private readonly ICandlesHistoryBackupService _candlesHistoryBackupService;
         private readonly ILogger<RFactorCommandsHandler> _logger;
 
         public RFactorCommandsHandler(ICandlesHistoryRepository candlesHistoryRepository,
-            ICandlesManager candlesManager,
+            ICandlesCacheInitializationService candlesCacheInitializationService,
+            ICandlesHistoryBackupService candlesHistoryBackupService,
             ILogger<RFactorCommandsHandler> logger)
         {
             _candlesHistoryRepository = candlesHistoryRepository;
-            _candlesManager = candlesManager;
+            _candlesCacheInitializationService = candlesCacheInitializationService;
+            _candlesHistoryBackupService = candlesHistoryBackupService;
             _logger = logger;
+        }
+
+        [UsedImplicitly]
+        public async Task Handle(BackupHistoricalCandlesCommand command, IEventPublisher publisher)
+        {
+            _logger.LogInformation("{Command} received for product {ProductId}, task id {Id}",
+                nameof(BackupHistoricalCandlesCommand),
+                command.ProductId,
+                command.TaskId);
+
+            await _candlesHistoryBackupService.Backup(command.ProductId);
+
+            publisher.PublishEvent(new BackupHistoricalCandlesFinishedEvent { TaskId = command.TaskId });
         }
 
         [UsedImplicitly]
         public async Task Handle(UpdateHistoricalCandlesCommand command, IEventPublisher publisher)
         {
-            _logger.LogInformation("{Command} received for product {ProductId}",
+            _logger.LogInformation("{Command} received for product {ProductId}, task id {Id}",
                 nameof(UpdateHistoricalCandlesCommand),
-                command.ProductId);
+                command.ProductId,
+                command.TaskId);
 
-            var candles = (await _candlesHistoryRepository.GetCandlesAsync(command.ProductId,
-                    command.RFactorDate.Date,
-                    DateTime.UtcNow))
-                .ToList();
+            await _candlesHistoryRepository.ApplyRFactor(command.ProductId, command.RFactor, command.RFactorDate,
+                command.LastTradingDay);
 
-            var updatedCandles = new List<ICandle>();
+            publisher.PublishEvent(new HistoricalCandlesUpdatedEvent { TaskId = command.TaskId, });
+        }
 
-            var rFactor = decimal.ToDouble(command.RFactor);
+        [UsedImplicitly]
+        public async Task Handle(UpdateCandlesCacheCommand command, IEventPublisher publisher)
+        {
+            _logger.LogInformation("{Command} received for product {ProductId}, task id {Id}",
+                nameof(UpdateCandlesCacheCommand),
+                command.ProductId,
+                command.TaskId);
 
-            if (command.UpdateAllCandles)
-            {
-                updatedCandles = candles
-                    .Select(x =>
-                    {
-                        var candle = Candle.Copy(x);
-                        return candle.UpdateRFactor(rFactor);
-                    })
-                    .ToList();
-            }
-            else
-            {
-                if (command.UpdateMonthlyCandles)
-                {
-                    updatedCandles = candles
-                        .Where(x => x.TimeInterval == CandleTimeInterval.Month)
-                        .Select(x =>
-                        {
-                            var candle = Candle.Copy(x);
-                            return candle.UpdateMonthlyOrWeeklyRFactor(rFactor);
-                        })
-                        .ToList();
-                }
+            await _candlesCacheInitializationService.InitializeCacheAsync(command.ProductId);
 
-                if (command.UpdateWeeklyCandles)
-                {
-                    updatedCandles = candles
-                        .Where(x => x.TimeInterval == CandleTimeInterval.Week)
-                        .Select(x =>
-                        {
-                            var candle = Candle.Copy(x);
-                            return candle.UpdateMonthlyOrWeeklyRFactor(rFactor);
-                        })
-                        .ToList();
-                }
-            }
-
-            await _candlesManager.ProcessCandlesAsync(updatedCandles);
-
-            publisher.PublishEvent(new HistoricalCandlesUpdatedEvent() { TaskId = command.TaskId, });
+            publisher.PublishEvent(new CandlesCacheUpdatedEvent { TaskId = command.TaskId, });
         }
     }
 }

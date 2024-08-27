@@ -15,7 +15,7 @@ using MoreLinq;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
-    public class CandlesCacheInitalizationService : ICandlesCacheInitalizationService
+    public class CandlesCacheInitializationService : ICandlesCacheInitializationService
     {
         private readonly ILog _log;
         private readonly IAssetPairsManager _assetPairsManager;
@@ -25,7 +25,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         private readonly ICandlesAmountManager _candlesAmountManager;
         private readonly ICandlesShardValidator _candlesShardValidator;
 
-        public CandlesCacheInitalizationService(
+        public CandlesCacheInitializationService(
             ILog log,
             IAssetPairsManager assetPairsManager,
             IClock clock,
@@ -45,7 +45,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
         public async Task InitializeCacheAsync()
         {
-            await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, "Caching candles history...");
+            await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, "Caching candles history...");
 
             var assetPairs = await _assetPairsManager.GetAllEnabledAsync();
             var now = _clock.UtcNow;
@@ -55,7 +55,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair, now)));
             }
 
-            await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, "All candles history is cached");
+            await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, "All candles history is cached");
         }
 
         public async Task InitializeCacheAsync(string productId)
@@ -72,13 +72,13 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         {
             if (!_candlesShardValidator.CanHandle(assetPair.Id))
             {
-                await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null,
+                await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null,
                     $"Skipping {assetPair.Id} caching, since it doesn't meet sharding condition");
                 
                 return;
             }
             
-            await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, $"Caching {assetPair.Id} candles history...");
+            await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, $"Caching {assetPair.Id} candles history...");
 
             try
             {
@@ -96,12 +96,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
             catch (Exception e)
             {
-                await _log.WriteErrorAsync(nameof(CandlesCacheInitalizationService), nameof(CacheAssetPairCandlesAsync),
+                await _log.WriteErrorAsync(nameof(CandlesCacheInitializationService), nameof(CacheAssetPairCandlesAsync),
                     $"Couldn't cache candles history for asset pair [{assetPair.Id}]", e);
             }
             finally
             {
-                await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(CacheAssetPairCandlesAsync), null,
+                await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(CacheAssetPairCandlesAsync), null,
                     $"{assetPair.Id} candles history caching finished");
             }
         }

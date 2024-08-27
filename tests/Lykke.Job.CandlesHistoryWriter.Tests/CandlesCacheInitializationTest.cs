@@ -41,7 +41,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
 
         private const int AmountOfCandlesToStore = 5;
 
-        private ICandlesCacheInitalizationService _service;
+        private ICandlesCacheInitializationService _service;
         private Mock<IClock> _dateTimeProviderMock;
         private Mock<ICandlesCacheService> _cacheServiceMock;
         private Mock<ICandlesHistoryRepository> _historyRepositoryMock;
@@ -76,7 +76,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 .Setup(m => m.TryGetEnabledPairAsync(It.IsAny<string>()))
                 .ReturnsAsync((string assetPairId) => _assetPairs.SingleOrDefault(a => a.Id == assetPairId));
 
-            _service = new CandlesCacheInitalizationService(
+            _service = new CandlesCacheInitializationService(
                 logMock.Object,
                 _assetPairsManagerMock.Object,
                 _dateTimeProviderMock.Object,
