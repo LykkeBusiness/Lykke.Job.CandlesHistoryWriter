@@ -26,7 +26,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             var repo = GetBackupRepo(productId);
 
             var (sourceTableName, backupTableName) = await repo.CreateTable();
-            await repo.Truncate(backupTableName);
             await repo.CopyData(sourceTableName, backupTableName);
         }
 
