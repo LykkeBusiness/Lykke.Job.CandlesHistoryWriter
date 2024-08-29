@@ -1,9 +1,6 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CorporateActions.Broker.Contracts.Workflow;
 using JetBrains.Annotations;
@@ -11,7 +8,6 @@ using Lykke.Cqrs;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using Lykke.Job.CandlesHistoryWriter.Services;
-using Lykke.Job.CandlesProducer.Contract;
 using Microsoft.Extensions.Logging;
 
 namespace Lykke.Job.CandlesHistoryWriter.Workflow

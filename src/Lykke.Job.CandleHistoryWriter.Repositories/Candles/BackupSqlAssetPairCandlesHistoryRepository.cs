@@ -38,10 +38,6 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             INSERT INTO {0}
             SELECT * FROM {1}";
 
-        private const string TruncateTableScript = @"
-            truncate table {0};
-        ";
-
         private const string Suffix = "_backup";
 
         public BackupSqlAssetPairCandlesHistoryRepository(string assetName,
@@ -63,28 +59,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Could not copy data to backup table {TableName}", backupTableName);
-                throw;
-            }
-        }
-
-        public async Task Truncate(string table)
-        {
-            if (!table.Contains(Suffix))
-            {
-                _logger.LogError("Cannot truncate non-backup table {Table}", table);
-                return;
-            }
-
-            var script = string.Format(TruncateTableScript, table);
-            try
-            {
-                await using var conn = new SqlConnection(_connectionString);
-                await conn.ExecuteAsync(script);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Could not truncate backup table {TableName}", table);
+                _logger.LogError(e, "Could not copy data to the backup table {TableName}", backupTableName);
                 throw;
             }
         }
@@ -93,11 +68,13 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
         {
             var fixedAssetName = _assetName.Replace("-", "_");
 
+            var suffixWithTimestamp = $"{Suffix}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+
             var sourceTableName = $"candleshistory_{fixedAssetName}";
-            var backupTableName = $"{sourceTableName}{Suffix}";
+            var backupTableName = $"{sourceTableName}{suffixWithTimestamp}";
 
             var fullSourceTableName = $"[{SchemaName}].[{sourceTableName}]";
-            var fullBackupTableName = $"[{SchemaName}].[{sourceTableName}{Suffix}]";
+            var fullBackupTableName = $"[{SchemaName}].[{sourceTableName}{suffixWithTimestamp}]";
 
             try
             {
@@ -106,7 +83,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Could not create backup table {TableName}", fullBackupTableName);
+                _logger.LogError(e, "Could not create the backup table {TableName}", fullBackupTableName);
                 throw;
             }
 
