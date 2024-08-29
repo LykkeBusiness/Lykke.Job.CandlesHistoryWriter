@@ -348,7 +348,7 @@ set
             end) 
 where 1=1
         and LastUpdateTimestamp > @rFactorDate
-        and [Timestamp] <= @rFactorDate
+        and CONVERT(date, [Timestamp]) <= CONVERT(date, @rFactorDate)
         and TimeInterval = @timeInterval";
         
         private async Task UpdateBrokenWeeklyCandles(UpdateBrokenWeeklyCandlesCommand command, SqlConnection conn, SqlTransaction tran)
@@ -400,7 +400,7 @@ where 1=1
             var sql =
                 @$"update {_tableName} 
                 set High *= @rFactor, Low *= @rFactor, [Open] *= @rFactor, [Close] *= @rFactor
-                where [Timestamp] <= @rFactorDate and TimeInterval < {(int)CandleTimeInterval.Week}";
+                where CONVERT(date, [Timestamp]) <= CONVERT(date, @rFactorDate) and TimeInterval < {(int)CandleTimeInterval.Week}";
 
             await conn.ExecuteAsync(sql, new { rFactor = command.RFactor, rFactorDate = command.RFactorDate }, tran);
         }
