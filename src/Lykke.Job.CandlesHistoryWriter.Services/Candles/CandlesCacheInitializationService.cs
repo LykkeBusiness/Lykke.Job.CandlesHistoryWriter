@@ -50,7 +50,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
             if (_cacheCandlesAssetsBatchSize <= 10)
             {
-                _log.WriteWarning(nameof(CandlesCacheInitalizationService),
+                _log.WriteWarning(nameof(CandlesCacheInitializationService),
                     new { ConfiguredCacheCandlesAssetsBatchSize = _cacheCandlesAssetsBatchSize }.ToJson(),
                     "Configured cache candles assets batch size is too low. " +
                     "It may lead to performance issues. " +
@@ -59,7 +59,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
             if (_cacheCandlesAssetsBatchSize != configuredCacheCandlesAssetsBatchSize)
             {
-                _log.WriteWarning(nameof(CandlesCacheInitalizationService),
+                _log.WriteWarning(nameof(CandlesCacheInitializationService),
                     new
                     {
                         ConfiguredCacheCandlesAssetsBatchSize = configuredCacheCandlesAssetsBatchSize,
@@ -106,12 +106,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             if (!_candlesShardValidator.CanHandle(productId))
             {
                 await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null,
-                    $"Skipping {assetPair.Id} caching, since it doesn't meet sharding condition");
+                    $"Skipping {productId} caching, since it doesn't meet sharding condition");
 
                 return;
             }
 
-            await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, $"Caching {assetPair.Id} candles history...");
+            await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, $"Caching {productId} candles history...");
 
             try
             {
