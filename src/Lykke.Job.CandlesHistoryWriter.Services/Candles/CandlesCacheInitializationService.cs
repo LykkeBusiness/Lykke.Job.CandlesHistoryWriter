@@ -16,7 +16,7 @@ using MoreLinq;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
-    public class CandlesCacheInitalizationService : ICandlesCacheInitalizationService
+    public class CandlesCacheInitializationService : ICandlesCacheInitializationService
     {
         private readonly ILog _log;
         private readonly IAssetPairsManager _assetPairsManager;
@@ -29,7 +29,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
         private const int DefaultCacheCandlesAssetsBatchSize = 100;
 
-        public CandlesCacheInitalizationService(
+        public CandlesCacheInitializationService(
             ILog log,
             IAssetPairsManager assetPairsManager,
             IClock clock,
@@ -50,7 +50,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
             if (_cacheCandlesAssetsBatchSize <= 10)
             {
-                _log.WriteWarning(nameof(CandlesCacheInitalizationService),
+                _log.WriteWarning(nameof(CandlesCacheInitializationService),
                     new { ConfiguredCacheCandlesAssetsBatchSize = _cacheCandlesAssetsBatchSize }.ToJson(),
                     "Configured cache candles assets batch size is too low. " +
                     "It may lead to performance issues. " +
@@ -59,7 +59,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
             if (_cacheCandlesAssetsBatchSize != configuredCacheCandlesAssetsBatchSize)
             {
-                _log.WriteWarning(nameof(CandlesCacheInitalizationService),
+                _log.WriteWarning(nameof(CandlesCacheInitializationService),
                     new
                     {
                         ConfiguredCacheCandlesAssetsBatchSize = configuredCacheCandlesAssetsBatchSize,
@@ -81,30 +81,37 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
         public async Task InitializeCacheAsync()
         {
-            await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, "Caching candles history...");
+            await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, "Caching candles history...");
 
             var assetPairs = await _assetPairsManager.GetAllEnabledAsync();
             var now = _clock.UtcNow;
 
             foreach (var cacheAssetPairBatch in assetPairs.Batch(_cacheCandlesAssetsBatchSize))
             {
-                await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair, now)));
+                await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair.Id, now)));
             }
 
-            await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, "All candles history is cached");
+            await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, "All candles history is cached");
         }
 
-        private async Task CacheAssetPairCandlesAsync(AssetPair assetPair, DateTime now)
+        public async Task InitializeCacheAsync(string productId)
         {
-            if (!_candlesShardValidator.CanHandle(assetPair.Id))
+            var now = _clock.UtcNow;
+            
+            await CacheAssetPairCandlesAsync(productId, now);
+        }
+
+        private async Task CacheAssetPairCandlesAsync(string productId, DateTime now)
+        {
+            if (!_candlesShardValidator.CanHandle(productId))
             {
-                await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null,
-                    $"Skipping {assetPair.Id} caching, since it doesn't meet sharding condition");
+                await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null,
+                    $"Skipping {productId} caching, since it doesn't meet sharding condition");
 
                 return;
             }
 
-            await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(InitializeCacheAsync), null, $"Caching {assetPair.Id} candles history...");
+            await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, $"Caching {productId} candles history...");
 
             try
             {
@@ -114,21 +121,21 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                     {
                         var alignedToDate = now.TruncateTo(timeInterval).AddIntervalTicks(1, timeInterval);
                         var candlesAmountToStore = _candlesAmountManager.GetCandlesAmountToStore(timeInterval);
-                        var candles = await _candlesHistoryRepository.GetLastCandlesAsync(assetPair.Id, timeInterval, priceType, alignedToDate, candlesAmountToStore);
+                        var candles = await _candlesHistoryRepository.GetLastCandlesAsync(productId, timeInterval, priceType, alignedToDate, candlesAmountToStore);
 
-                        await _candlesCacheService.InitializeAsync(assetPair.Id, priceType, timeInterval, candles.ToArray());
+                        await _candlesCacheService.InitializeAsync(productId, priceType, timeInterval, candles.ToArray());
                     }
                 }
             }
             catch (Exception e)
             {
-                await _log.WriteErrorAsync(nameof(CandlesCacheInitalizationService), nameof(CacheAssetPairCandlesAsync),
-                    $"Couldn't cache candles history for asset pair [{assetPair.Id}]", e);
+                await _log.WriteErrorAsync(nameof(CandlesCacheInitializationService), nameof(CacheAssetPairCandlesAsync),
+                    $"Couldn't cache candles history for asset pair [{productId}]", e);
             }
             finally
             {
-                await _log.WriteInfoAsync(nameof(CandlesCacheInitalizationService), nameof(CacheAssetPairCandlesAsync), null,
-                    $"{assetPair.Id} candles history caching finished");
+                await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(CacheAssetPairCandlesAsync), null,
+                    $"{productId} candles history caching finished");
             }
         }
     }

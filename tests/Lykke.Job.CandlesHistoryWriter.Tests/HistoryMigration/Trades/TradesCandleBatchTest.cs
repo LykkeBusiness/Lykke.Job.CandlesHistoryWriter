@@ -308,6 +308,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.HistoryMigration.Trades
             return 0;
         }
 
+        public Task ApplyRFactor(string productId, decimal rFactor, DateTime rFactorDate, DateTime lastTradingDay)
+        {
+            throw new NotImplementedException();
+        }
+
         #region NotImplemented"
 
         public bool CanStoreAssetPair(string assetPairId)
@@ -321,6 +326,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.HistoryMigration.Trades
         }
 
         public Task<IEnumerable<ICandle>> GetCandlesAsync(string assetPairId, CandleTimeInterval interval, CandlePriceType priceType, DateTime from, DateTime to)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<ICandle>> GetCandlesAsync(string assetPairId, DateTime from, DateTime to)
         {
             throw new NotImplementedException();
         }

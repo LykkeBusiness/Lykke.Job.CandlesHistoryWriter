@@ -20,6 +20,67 @@ namespace Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles
         public double TradingOppositeVolume { get; }
         public double LastTradePrice { get; }
         public DateTime LastUpdateTimestamp { get; }
+        
+        public ICandle UpdateRFactor(double rFactor)
+        {
+            if (rFactor <= 0)
+            {
+                throw new ArgumentException("R-factor should be greater than 0.");
+            }
+
+            return new Candle(
+                AssetPairId,
+                PriceType,
+                TimeInterval,
+                Timestamp,
+                Open * rFactor,
+                Close * rFactor,
+                High * rFactor,
+                Low * rFactor,
+                TradingVolume,
+                TradingOppositeVolume,
+                LastTradePrice,
+                LastUpdateTimestamp);
+        }
+        
+        public ICandle UpdateMonthlyOrWeeklyRFactor(double rFactor)
+        {
+            if (rFactor <= 0)
+            {
+                throw new ArgumentException("R-factor should be greater than 0.");
+            }
+
+            if (TimeInterval != CandleTimeInterval.Month && TimeInterval != CandleTimeInterval.Week)
+            {
+                throw new ArgumentException("Can only use this method for updating Monthly or Weekly candles");
+            }
+
+            var low = Low;
+            var high = High;
+
+            if (rFactor > 1)
+            {
+                low *= rFactor;
+            }
+            else
+            {
+                high *= rFactor;
+            }
+
+            return new Candle(
+                AssetPairId,
+                PriceType,
+                TimeInterval,
+                Timestamp,
+                Open * rFactor,
+                Close,
+                high,
+                low,
+                TradingVolume,
+                TradingOppositeVolume,
+                LastTradePrice,
+                LastUpdateTimestamp);
+        }
 
         private Candle(
             string assetPair,

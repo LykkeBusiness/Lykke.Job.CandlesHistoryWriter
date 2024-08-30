@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Autofac;
 using BookKeeper.Client.Workflow.Events;
 using Common.Log;
+using CorporateActions.Broker.Contracts.Workflow;
 using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
 using Lykke.Cqrs.Configuration.BoundedContext;
@@ -13,6 +14,7 @@ using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Cqrs.Middleware.Logging;
 using Lykke.Job.CandlesHistoryWriter.Services.Settings;
 using Lykke.Job.CandlesHistoryWriter.Services.Workflow;
+using Lykke.Job.CandlesHistoryWriter.Workflow;
 using Lykke.Messaging.Serialization;
 using Lykke.Snow.Common.Correlation.Cqrs;
 using Lykke.Snow.Common.Startup;
@@ -24,6 +26,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 {
     public class CqrsModule : Module
     {
+        private const string DefaultRoute = "self";
         private const string EventsRoute = "events";
         private const string CommandsRoute = "commands";
         private readonly CqrsSettings _settings;
@@ -45,6 +48,8 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
             builder.RegisterType<EodStartedProjection>().AsSelf();
+            builder.RegisterType<RFactorCommandsHandler>().AsSelf();
+
             builder.RegisterType<CqrsCorrelationManager>()
                 .AsSelf();
 
@@ -98,6 +103,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .QueueCapacity(1024);
             
             RegisterEodProjection(contextRegistration);
+            RegisterRFactorCommandsHandler(contextRegistration);
 
             return contextRegistration;
         }
@@ -112,5 +118,23 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .WithProjection(
                     typeof(EodStartedProjection), _settings.ContextNames.BookKeeper);
 		}
+        
+        private void RegisterRFactorCommandsHandler(ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration
+                .ListeningCommands(
+                    typeof(BackupHistoricalCandlesCommand),
+                    typeof(UpdateHistoricalCandlesCommand),
+                    typeof(UpdateCandlesCacheCommand)
+                )
+                .On(DefaultRoute)
+                .WithCommandsHandler<RFactorCommandsHandler>()
+                .PublishingEvents(
+                    typeof(BackupHistoricalCandlesFinishedEvent),
+                    typeof(HistoricalCandlesUpdatedEvent),
+                    typeof(CandlesCacheUpdatedEvent)
+                )
+                .With(EventsRoute);
+        }
     }
 }

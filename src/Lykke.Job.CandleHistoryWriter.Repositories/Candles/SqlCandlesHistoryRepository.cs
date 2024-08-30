@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
+using Lykke.Job.CandlesHistoryWriter.Core.Domain.RFactor;
 using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesProducer.Contract;
 using Lykke.SettingsReader;
@@ -50,6 +51,14 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             return await repo.GetCandlesAsync(priceType, interval, from, to);
 
         }
+        
+        public async Task<IEnumerable<ICandle>> GetCandlesAsync(string assetPairId, DateTime from, DateTime to)
+        {
+            var repo = GetRepo(assetPairId);
+
+            return await repo.GetCandlesAsync(from, to);
+
+        }
 
         public async Task<IEnumerable<ICandle>> GetLastCandlesAsync(string assetPairId, CandleTimeInterval interval,
             CandlePriceType priceType, DateTime to, int number)
@@ -89,6 +98,29 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
                 // ReSharper disable once PossibleMultipleEnumeration
                 await repo.ReplaceCandlesAsync(candlesToReplace, priceType);
 
+        }
+
+        public async Task ApplyRFactor(string productId, decimal rFactor, DateTime rFactorDate, DateTime lastTradingDay)
+        {
+            var repo = GetRepo(productId);
+            var commands = new List<UpdateCandlesCommand>
+            {
+                new UpdateShortLivedCandlesCommand(rFactor, rFactorDate),
+                new UpdateOldMonthlyCandlesCommand(rFactor, rFactorDate),
+                new UpdateOldWeeklyCandlesCommand(rFactor, rFactorDate),
+            };
+
+            if (!rFactorDate.SameWeek(lastTradingDay, DayOfWeek.Monday))
+            {
+                commands.Add(new UpdateBrokenWeeklyCandlesCommand(rFactor, rFactorDate));
+            }
+
+            if (!rFactorDate.SameMonth(lastTradingDay))
+            {
+                commands.Add(new UpdateBrokenMonthlyCandlesCommand(rFactor, rFactorDate));
+            }
+
+            await repo.ApplyRFactor(commands);
         }
 
         private SqlAssetPairCandlesHistoryRepository GetRepo(string assetPairId) =>

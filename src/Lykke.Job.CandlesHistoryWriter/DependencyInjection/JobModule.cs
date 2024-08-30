@@ -187,6 +187,11 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                     .As<ICandlesHistoryRepository>()
                     .WithParameter(TypedParameter.From(_dbSettings.Nested(s => s.SnapshotsConnectionString)))
                     .SingleInstance();
+                
+                builder.RegisterType<CandlesHistoryBackupService>()
+                    .As<ICandlesHistoryBackupService>()
+                    .WithParameter(TypedParameter.From(_dbSettings.Nested(s => s.SnapshotsConnectionString)))
+                    .SingleInstance();
             }
             else if (_settings.Db.StorageMode == StorageMode.Azure)
             {
@@ -277,8 +282,8 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .WithParameter(TypedParameter.From(_settings.QueueMonitor))
                 .AutoActivate();
 
-            builder.RegisterType<CandlesCacheInitalizationService>()
-                .As<ICandlesCacheInitalizationService>()
+            builder.RegisterType<CandlesCacheInitializationService>()
+                .As<ICandlesCacheInitializationService>()
                 .WithParameter(TypedParameter.From(_settings.CacheCandlesAssetsBatchSize))
                 .SingleInstance();
 
