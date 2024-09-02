@@ -1,3 +1,19 @@
+## 2.11.0 - Nova 2. Delivery 45 (September 02, 2024)
+### What's changed
+* LT-5672: Redis timeout.
+* LT-5566: Implement rfactor saga.
+
+### Deployment
+
+Add new configuration key `CacheCandlesAssetsBatchSize`. It controls the size of the asset pairs batch when caching candles which affects startup performance. For better performace it is recommended to use values > 10. This will allow the utilize client host resources and use Redis connection more optimal. However, the particular value is a matter of experiments on particular environment setup.
+Example:
+```
+    "HistoryTicksCacheSize": 200,
+    "CacheCleanUpPeriod": "00:03:00",
+    "CacheCandlesAssetsBatchSize": 100,
+```
+
+
 ## 2.10.0 - Nova 2. Delivery 44 (August 16, 2024)
 ### What's changed
 * LT-5415: Add diagnostic variables to create a readable dump.
