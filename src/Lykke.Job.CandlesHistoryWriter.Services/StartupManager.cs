@@ -19,7 +19,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
     {
         private readonly ILog _log;
         private readonly ICandlesCacheInitializationService _cacheInitializationService;
-        private readonly ICandlesSubscriber _candlesSubscriber;
         private readonly ISnapshotSerializer _snapshotSerializer;
         private readonly ICandlesPersistenceQueueSnapshotRepository _persistenceQueueSnapshotRepository;
         private readonly ICandlesPersistenceQueue _persistenceQueue;
@@ -32,7 +31,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
         public StartupManager(
             ILog log,
             ICandlesCacheInitializationService cacheInitializationService,
-            ICandlesSubscriber candlesSubscriber,
             ISnapshotSerializer snapshotSerializer,
             ICandlesPersistenceQueueSnapshotRepository persistenceQueueSnapshotRepository,
             ICandlesPersistenceQueue persistenceQueue,
@@ -49,7 +47,6 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
             _cacheInitializationService = cacheInitializationService ??
                                          throw new ArgumentNullException(nameof(cacheInitializationService));
-            _candlesSubscriber = candlesSubscriber ?? throw new ArgumentNullException(nameof(candlesSubscriber));
             _snapshotSerializer = snapshotSerializer ?? throw new ArgumentNullException(nameof(snapshotSerializer));
             _persistenceQueueSnapshotRepository = persistenceQueueSnapshotRepository ??
                                                   throw new ArgumentNullException(
@@ -93,15 +90,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting persistence manager...");
 
             _persistenceManager.Start();
-
-            // We can not combine it with the previous if(!_migration...) due to launch order importance.
-            if (!_migrationEnabled)
-            {
-                await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting candles subscriber...");
-
-                _candlesSubscriber.Start();
-            }
-
+            
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cqrs engine ...");
 
             _cqrsEngine.StartAll();
