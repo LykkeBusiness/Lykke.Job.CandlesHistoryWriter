@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -60,6 +60,10 @@
 
   <ItemGroup>
     <None Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageVersion Update="Lykke.MarginTrading.CorporateActions.Broker.Contracts" Version="1.9.3" />
   </ItemGroup>
 
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
