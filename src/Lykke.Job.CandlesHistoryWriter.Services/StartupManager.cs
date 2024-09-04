@@ -18,7 +18,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
     public class StartupManager : IStartupManager
     {
         private readonly ILog _log;
-        private readonly ICandlesCacheInitalizationService _cacheInitalizationService;
+        private readonly ICandlesCacheInitializationService _cacheInitializationService;
 
         private readonly ISnapshotSerializer _snapshotSerializer;
         private readonly ICandlesPersistenceQueueSnapshotRepository _persistenceQueueSnapshotRepository;
@@ -31,7 +31,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
         public StartupManager(
             ILog log,
-            ICandlesCacheInitalizationService cacheInitalizationService,
+            ICandlesCacheInitializationService cacheInitializationService,
             ISnapshotSerializer snapshotSerializer,
             ICandlesPersistenceQueueSnapshotRepository persistenceQueueSnapshotRepository,
             ICandlesPersistenceQueue persistenceQueue,
@@ -46,8 +46,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             _log = log.CreateComponentScope(nameof(StartupManager)) ??
                    throw new InvalidOperationException("Couldn't create a component scope for logging.");
 
-            _cacheInitalizationService = cacheInitalizationService ??
-                                         throw new ArgumentNullException(nameof(cacheInitalizationService));
+            _cacheInitializationService = cacheInitializationService ??
+                                         throw new ArgumentNullException(nameof(cacheInitializationService));
             _snapshotSerializer = snapshotSerializer ?? throw new ArgumentNullException(nameof(snapshotSerializer));
             _persistenceQueueSnapshotRepository = persistenceQueueSnapshotRepository ??
                                                   throw new ArgumentNullException(
