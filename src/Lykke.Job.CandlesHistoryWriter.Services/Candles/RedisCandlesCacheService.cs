@@ -63,7 +63,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             {
                 if (candle.AssetPairId != assetPairId)
                 {
-                    throw new ArgumentException($"Candle {candle.ToJson()} has invalid AssetPriceId", nameof(candles));
+                    throw new ArgumentException($"Candle {candle.ToJson()} has invalid AssetPairId. Expected: {assetPairId}.", nameof(candles));
                 }
                 if (candle.PriceType != priceType)
                 {
