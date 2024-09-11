@@ -25,7 +25,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
 
         private readonly ConcurrentDictionary<string, SqlAssetPairCandlesHistoryRepository> _sqlAssetPairRepositories;
 
-        public SqlCandlesHistoryRepository(IHealthService healthService, ILog log, 
+        public SqlCandlesHistoryRepository(IHealthService healthService, ILog log,
             IReloadingManager<string> assetConnectionString)
         {
             _healthService = healthService;
@@ -39,7 +39,9 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
         {
             var repo = GetRepo(assetPairId);
 
-            await repo.InsertOrMergeAsync(candles);
+            var l = candles.ToList();
+
+            await repo.InsertOrMergeAsync(l);
 
         }
 
@@ -51,7 +53,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
             return await repo.GetCandlesAsync(priceType, interval, from, to);
 
         }
-        
+
         public async Task<IEnumerable<ICandle>> GetCandlesAsync(string assetPairId, DateTime from, DateTime to)
         {
             var repo = GetRepo(assetPairId);
