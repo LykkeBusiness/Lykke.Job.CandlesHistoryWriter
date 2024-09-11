@@ -75,9 +75,9 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             _candlesShardRemoteSettings = candlesShardRemoteSettings;
             _log = log;
             _subscriptionSettings = RabbitMqSubscriptionSettings
-                .CreateForSubscriber(_settings.Rabbit.CandlesSubscription.ConnectionString, 
+                .CreateForSubscriber(_settings.Rabbit.CandlesSubscription.ConnectionString,
                     _settings.Rabbit.CandlesSubscription.Namespace,
-                    $"candles-v2.{_candlesShardRemoteSettings.Name}", 
+                    $"candles-v2.{_candlesShardRemoteSettings.Name}",
                     _settings.Rabbit.CandlesSubscription.Namespace, "candleshistory");
         }
 
@@ -87,7 +87,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                 .As<ILog>()
                 .SingleInstance();
 
-            
+
             builder.RegisterType<Clock>().As<IClock>();
 
             if (_monitoringServiceClient != null)
@@ -196,7 +196,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                     .As<ICandlesHistoryRepository>()
                     .WithParameter(TypedParameter.From(_dbSettings.Nested(s => s.SnapshotsConnectionString)))
                     .SingleInstance();
-                
+
                 builder.RegisterType<CandlesHistoryBackupService>()
                     .As<ICandlesHistoryBackupService>()
                     .WithParameter(TypedParameter.From(_dbSettings.Nested(s => s.SnapshotsConnectionString)))
@@ -254,7 +254,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                     .SingleInstance();
 
             builder.AddRabbitMqConnectionProvider();
-            
+
             builder.AddRabbitMqListener<CandlesUpdatedEvent, CandlesUpdatesHandler>(
                     _subscriptionSettings, (subscriber, context) =>
                     {
@@ -263,9 +263,8 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                             subscriber.SetPrefetchCount(_settings.Rabbit.Prefetch.Value);
                         }
                     })
-                .AddOptions(RabbitMqListenerOptions<CandlesUpdatedEvent>.MessagePack.NoLoss)
-                .AutoStart();
-            
+                .AddOptions(RabbitMqListenerOptions<CandlesUpdatedEvent>.MessagePack.NoLoss);
+
             builder.RegisterType<CandlesManager>()
                 .As<ICandlesManager>()
                 .SingleInstance();
