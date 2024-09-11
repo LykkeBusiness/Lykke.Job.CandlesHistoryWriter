@@ -36,7 +36,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 if (validationErrors.Any())
                 {
                     var message = string.Join("\r\n", validationErrors);
-                    _log.Warning(nameof(CandlesUpdatesHandler), context: candlesUpdate.ToJson(), message: message);
+                    await _log.WriteWarningAsync(nameof(CandlesUpdatesHandler), nameof(Handle), context: candlesUpdate.ToJson(), info: message);
 
                     return;
                 }
@@ -64,8 +64,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
             catch (Exception)
             {
-                _log.Warning(nameof(CandlesUpdatesHandler),
-                    context: candlesUpdate.ToJson(), message: "Failed to process candle");
+                await _log.WriteWarningAsync(nameof(CandlesUpdatesHandler), nameof(Handle),
+                    context: candlesUpdate.ToJson(), info: "Failed to process candle");
                 throw;
             }
         }
