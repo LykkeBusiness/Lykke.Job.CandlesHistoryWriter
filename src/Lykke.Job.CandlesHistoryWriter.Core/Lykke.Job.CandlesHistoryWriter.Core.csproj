@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="Lykke.Job.CandlesProducer.Contract" />
     <PackageReference Include="Lykke.Service.Assets.Client" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" />
