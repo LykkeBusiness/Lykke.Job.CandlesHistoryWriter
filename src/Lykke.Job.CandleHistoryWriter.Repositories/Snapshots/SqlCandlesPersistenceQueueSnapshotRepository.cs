@@ -51,7 +51,7 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Snapshots
                 if (string.IsNullOrEmpty(data))
                     return null;
 
-                var model = JsonConvert.DeserializeObject <IEnumerable < SnapshotCandleEntity >> (data);
+                var model = JsonConvert.DeserializeObject<IEnumerable<SnapshotCandleEntity>>(data);
 
                 return model.ToImmutableList<ICandle>();
             }
