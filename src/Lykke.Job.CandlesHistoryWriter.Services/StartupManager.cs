@@ -11,6 +11,8 @@ using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using Lykke.Job.CandlesHistoryWriter.Services.Candles;
+using Lykke.Job.CandlesProducer.Contract;
+using Lykke.RabbitMqBroker.Subscriber;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services
 {
@@ -27,6 +29,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
         private readonly ICqrsEngine _cqrsEngine;
         private readonly IEnumerable<INeedInitialization> _needInitializations;
         private readonly RedisCacheTruncator _redisCacheTruncator;
+        private readonly RabbitMqListener<CandlesUpdatedEvent> _candlesUpdatedListener;
 
         public StartupManager(
             ILog log,
@@ -38,7 +41,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             bool migrationEnabled,
             ICqrsEngine cqrsEngine,
             IEnumerable<INeedInitialization> needInitializations,
-            RedisCacheTruncator redisCacheTruncator)
+            RedisCacheTruncator redisCacheTruncator,
+            RabbitMqListener<CandlesUpdatedEvent> candlesUpdatedListener)
         {
             if (log == null)
                 throw new ArgumentNullException(nameof(log));
@@ -57,6 +61,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             _cqrsEngine = cqrsEngine ?? throw new ArgumentNullException(nameof(cqrsEngine));
             _needInitializations = needInitializations;
             _redisCacheTruncator = redisCacheTruncator;
+            _candlesUpdatedListener = candlesUpdatedListener;
         }
 
         public async Task StartAsync()
@@ -90,6 +95,10 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting persistence manager...");
 
             _persistenceManager.Start();
+
+            await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting candles updated listener...");
+
+            _candlesUpdatedListener.Start();
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cqrs engine ...");
 
