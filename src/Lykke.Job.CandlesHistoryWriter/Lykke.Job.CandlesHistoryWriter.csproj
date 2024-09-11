@@ -59,21 +59,5 @@
   <ItemGroup>
     <PackageVersion Update="Lykke.MarginTrading.CorporateActions.Broker.Contracts" Version="1.9.3" />
   </ItemGroup>
-  <
-  <
-  <
-  <
-  <
-  <
-  < HEAD
-
-  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-    <ItemGroup>
-      <DocFile Include="bin\*\*\Lykke.Job.CandlesHistoryWriter.xml" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DocFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />
-  </Target>
-  =======
-  >>>>>>> @{-1}
 
 </Project>
