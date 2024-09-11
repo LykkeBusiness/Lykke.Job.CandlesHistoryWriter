@@ -11,6 +11,7 @@ using Lykke.Job.CandlesProducer.Contract;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
+using Lykke.Common.Log;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
@@ -35,8 +36,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 if (validationErrors.Any())
                 {
                     var message = string.Join("\r\n", validationErrors);
-                    await _log.WriteWarningAsync(nameof(CandlesUpdatesHandler), nameof(CandlesUpdatedEvent),
-                        candlesUpdate.ToJson(), message);
+                    _log.Warning(nameof(CandlesUpdatesHandler), context: candlesUpdate.ToJson(), message: message);
 
                     return;
                 }
@@ -64,9 +64,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
             catch (Exception)
             {
-                await _log.WriteWarningAsync(nameof(CandlesUpdatesHandler),
-                    nameof(IMessageHandler<CandlesUpdatedEvent>),
-                    candlesUpdate.ToJson(), "Failed to process candle");
+                _log.Warning(nameof(CandlesUpdatesHandler),
+                    context: candlesUpdate.ToJson(), message: "Failed to process candle");
                 throw;
             }
         }
