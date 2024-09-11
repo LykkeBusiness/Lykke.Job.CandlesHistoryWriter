@@ -18,7 +18,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
     public class StartupManager : IStartupManager
     {
         private readonly ILog _log;
-        private readonly ICandlesCacheInitalizationService _cacheInitalizationService;
+        private readonly ICandlesCacheInitializationService _cacheInitalizationService;
         private readonly ISnapshotSerializer _snapshotSerializer;
         private readonly ICandlesPersistenceQueueSnapshotRepository _persistenceQueueSnapshotRepository;
         private readonly ICandlesPersistenceQueue _persistenceQueue;
@@ -30,7 +30,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
         public StartupManager(
             ILog log,
-            ICandlesCacheInitalizationService cacheInitalizationService,
+            ICandlesCacheInitializationService cacheInitalizationService,
             ISnapshotSerializer snapshotSerializer,
             ICandlesPersistenceQueueSnapshotRepository persistenceQueueSnapshotRepository,
             ICandlesPersistenceQueue persistenceQueue,
@@ -72,7 +72,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             {
                 await _log.WriteInfoAsync(nameof(StartAsync), "", "Initializing cache from the history async...");
 
-                tasks.Add(_cacheInitializationService.InitializeCacheAsync());
+                tasks.Add(_cacheInitalizationService.InitializeCacheAsync());
             }
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Waiting for async tasks...");
