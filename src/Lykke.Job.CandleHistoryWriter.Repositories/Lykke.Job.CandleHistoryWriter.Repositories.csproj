@@ -12,7 +12,6 @@
     <PackageReference Include="LykkeBiz.Logs.MsSql" />
     <PackageReference Include="MessagePack" />
     <PackageReference Include="Polly" />
-    <PackageReference Include="Microsoft.Data.SqlClient" />
   </ItemGroup>
 
   <ItemGroup>
