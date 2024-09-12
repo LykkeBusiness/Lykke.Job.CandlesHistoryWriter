@@ -177,7 +177,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
                         return _log.WriteErrorAsync("Persist single partition candles with retries", context, exception);
                     })
-                .ExecuteAsync(async () => await _repository.InsertOrMergeAsync(
+                .ExecuteAsync(() => _repository.InsertOrMergeAsync(
                     candles,
                     assetPairId,
                     priceType,

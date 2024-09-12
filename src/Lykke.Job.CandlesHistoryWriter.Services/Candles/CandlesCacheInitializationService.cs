@@ -97,7 +97,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         public async Task InitializeCacheAsync(string productId)
         {
             var now = _clock.UtcNow;
-            
+
             await CacheAssetPairCandlesAsync(productId, now);
         }
 
