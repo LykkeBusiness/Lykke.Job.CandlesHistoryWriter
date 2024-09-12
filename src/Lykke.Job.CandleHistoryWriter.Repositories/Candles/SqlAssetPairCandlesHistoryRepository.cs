@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -108,10 +107,8 @@ CREATE TABLE {0}(
                 }
                 catch (Exception ex)
                 {
-                    var errorMessage =
-                        $"Failed to insert or update a candle list with following assetPairIds: {string.Join(",", candles.Select(candle => candle.AssetPairId))}";
-                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync), errorMessage,
-                        ex);
+                    var errorMessage = $"Failed to insert or update a candle list with following assetPairIds: {string.Join(",", candles.Select(candle => candle.AssetPairId))}";
+                    _log?.WriteErrorAsync(nameof(SqlAssetPairCandlesHistoryRepository), nameof(InsertOrMergeAsync), errorMessage, ex);
                     transaction.Rollback();
                 }
             }
