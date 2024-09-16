@@ -96,9 +96,13 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
             _persistenceManager.Start();
 
-            await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting candles updated listener...");
+            if (!_migrationEnabled)
+            {
 
-            _candlesUpdatedListener.Start();
+                await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting candles updated listener...");
+
+                _candlesUpdatedListener.Start();
+            }
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cqrs engine ...");
 
