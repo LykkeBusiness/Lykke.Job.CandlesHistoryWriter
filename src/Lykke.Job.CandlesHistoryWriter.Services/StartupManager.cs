@@ -77,7 +77,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             {
                 await _log.WriteInfoAsync(nameof(StartAsync), "", "Initializing cache from the history async...");
 
-                tasks.Add(_cacheInitializationService.InitializeCacheAsync());
+                tasks.Add(_cacheInitalizationService.InitializeCacheAsync());
             }
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Waiting for async tasks...");
