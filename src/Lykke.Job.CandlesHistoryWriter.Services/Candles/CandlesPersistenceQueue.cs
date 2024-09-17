@@ -23,7 +23,7 @@ using Polly;
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
     [UsedImplicitly(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
-    public class CandlesPersistenceQueue : 
+    public class CandlesPersistenceQueue :
         ProducerConsumer<IReadOnlyCollection<ICandle>>,
         ICandlesPersistenceQueue
     {
@@ -37,7 +37,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         // store only the last state of the candle, and thus, reduce memory consumtion
 
         private ConcurrentQueue<ICandle> _candlesToDispatch;
-        
+
         public CandlesPersistenceQueue(
             ICandlesHistoryRepository repository,
             ILog log,
@@ -131,7 +131,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
             sw.Stop();
 
-            await _log.WriteInfoAsync("Persist candles batch", string.Empty, 
+            await _log.WriteInfoAsync("Persist candles batch", string.Empty,
                 $"Candles batch with {candles.Count} candles is persisted in {sw.Elapsed}. Amount of batches in queue = {_healthService.BatchesToPersistQueueLength}. Amount of candles to dispath = {_healthService.CandlesToDispatchQueueLength}");
         }
 
@@ -143,7 +143,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
 
             _healthService.TraceStartPersistCandles();
-                    
+
             try
             {
                 var grouppedCandles = candles

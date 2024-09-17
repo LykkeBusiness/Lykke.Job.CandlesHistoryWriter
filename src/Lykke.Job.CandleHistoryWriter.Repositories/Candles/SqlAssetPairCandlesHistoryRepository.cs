@@ -107,8 +107,8 @@ CREATE TABLE {0}(
                 }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(SqlCandlesHistoryRepository), nameof(InsertOrMergeAsync),
-                        $"Failed to insert or update a candle list", ex);
+                    var errorMessage = $"Failed to insert or update a candle list with following assetPairIds: {string.Join(",", candles.Select(candle => candle.AssetPairId))}";
+                    _log?.WriteErrorAsync(nameof(SqlAssetPairCandlesHistoryRepository), nameof(InsertOrMergeAsync), errorMessage, ex);
                     transaction.Rollback();
                 }
             }
@@ -350,7 +350,7 @@ where 1=1
         and LastUpdateTimestamp > @rFactorDate
         and CONVERT(date, [Timestamp]) <= CONVERT(date, @rFactorDate)
         and TimeInterval = @timeInterval";
-        
+
         private async Task UpdateBrokenWeeklyCandles(UpdateBrokenWeeklyCandlesCommand command, SqlConnection conn, SqlTransaction tran)
         {
             var sql = string.Format(updateBrokenCandlesSql, _tableName);
@@ -358,10 +358,10 @@ where 1=1
             {
                 rFactor = command.RFactor,
                 rFactorDate = command.RFactorDate,
-                timeInterval = (int)CandleTimeInterval.Week, 
+                timeInterval = (int)CandleTimeInterval.Week,
             }, tran);
         }
-        
+
         private async Task UpdateBrokenMonthlyCandles(UpdateBrokenMonthlyCandlesCommand command, SqlConnection conn, SqlTransaction tran)
         {
             var sql = string.Format(updateBrokenCandlesSql, _tableName);
@@ -369,7 +369,7 @@ where 1=1
             {
                 rFactor = command.RFactor,
                 rFactorDate = command.RFactorDate,
-                timeInterval = (int)CandleTimeInterval.Month, 
+                timeInterval = (int)CandleTimeInterval.Month,
             }, tran);
         }
 
@@ -377,8 +377,9 @@ where 1=1
         {
             var sql = string.Format(updateOldCandlesSql, _tableName);
 
-            await conn.ExecuteAsync(sql, new { 
-                rFactor = command.RFactor, 
+            await conn.ExecuteAsync(sql, new
+            {
+                rFactor = command.RFactor,
                 cutoffDate = command.CutoffDate,
                 timeInterval = (int)CandleTimeInterval.Week,
             }, tran);
@@ -388,8 +389,9 @@ where 1=1
         {
             var sql = string.Format(updateOldCandlesSql, _tableName);
 
-            await conn.ExecuteAsync(sql, new { 
-                rFactor = command.RFactor, 
+            await conn.ExecuteAsync(sql, new
+            {
+                rFactor = command.RFactor,
                 cutoffDate = command.CutoffDate,
                 timeInterval = (int)CandleTimeInterval.Month,
             }, tran);

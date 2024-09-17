@@ -11,6 +11,8 @@ using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using Lykke.Job.CandlesHistoryWriter.Services.Candles;
+using Lykke.Job.CandlesProducer.Contract;
+using Lykke.RabbitMqBroker.Subscriber;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services
 {
@@ -18,8 +20,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
     public class StartupManager : IStartupManager
     {
         private readonly ILog _log;
-        private readonly ICandlesCacheInitializationService _cacheInitializationService;
-        private readonly ICandlesSubscriber _candlesSubscriber;
+        private readonly ICandlesCacheInitializationService _cacheInitalizationService;
         private readonly ISnapshotSerializer _snapshotSerializer;
         private readonly ICandlesPersistenceQueueSnapshotRepository _persistenceQueueSnapshotRepository;
         private readonly ICandlesPersistenceQueue _persistenceQueue;
@@ -28,11 +29,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
         private readonly ICqrsEngine _cqrsEngine;
         private readonly IEnumerable<INeedInitialization> _needInitializations;
         private readonly RedisCacheTruncator _redisCacheTruncator;
+        private readonly RabbitMqListener<CandlesUpdatedEvent> _candlesUpdatedListener;
 
         public StartupManager(
             ILog log,
-            ICandlesCacheInitializationService cacheInitializationService,
-            ICandlesSubscriber candlesSubscriber,
+            ICandlesCacheInitializationService cacheInitalizationService,
             ISnapshotSerializer snapshotSerializer,
             ICandlesPersistenceQueueSnapshotRepository persistenceQueueSnapshotRepository,
             ICandlesPersistenceQueue persistenceQueue,
@@ -40,16 +41,16 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             bool migrationEnabled,
             ICqrsEngine cqrsEngine,
             IEnumerable<INeedInitialization> needInitializations,
-            RedisCacheTruncator redisCacheTruncator)
+            RedisCacheTruncator redisCacheTruncator,
+            RabbitMqListener<CandlesUpdatedEvent> candlesUpdatedListener)
         {
             if (log == null)
                 throw new ArgumentNullException(nameof(log));
             _log = log.CreateComponentScope(nameof(StartupManager)) ??
                    throw new InvalidOperationException("Couldn't create a component scope for logging.");
 
-            _cacheInitializationService = cacheInitializationService ??
-                                         throw new ArgumentNullException(nameof(cacheInitializationService));
-            _candlesSubscriber = candlesSubscriber ?? throw new ArgumentNullException(nameof(candlesSubscriber));
+            _cacheInitalizationService = cacheInitalizationService ??
+                                         throw new ArgumentNullException(nameof(cacheInitalizationService));
             _snapshotSerializer = snapshotSerializer ?? throw new ArgumentNullException(nameof(snapshotSerializer));
             _persistenceQueueSnapshotRepository = persistenceQueueSnapshotRepository ??
                                                   throw new ArgumentNullException(
@@ -60,6 +61,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             _cqrsEngine = cqrsEngine ?? throw new ArgumentNullException(nameof(cqrsEngine));
             _needInitializations = needInitializations;
             _redisCacheTruncator = redisCacheTruncator;
+            _candlesUpdatedListener = candlesUpdatedListener;
         }
 
         public async Task StartAsync()
@@ -75,7 +77,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
             {
                 await _log.WriteInfoAsync(nameof(StartAsync), "", "Initializing cache from the history async...");
 
-                tasks.Add(_cacheInitializationService.InitializeCacheAsync());
+                tasks.Add(_cacheInitalizationService.InitializeCacheAsync());
             }
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Waiting for async tasks...");
@@ -94,12 +96,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
             _persistenceManager.Start();
 
-            // We can not combine it with the previous if(!_migration...) due to launch order importance.
             if (!_migrationEnabled)
             {
-                await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting candles subscriber...");
 
-                _candlesSubscriber.Start();
+                await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting candles updated listener...");
+
+                _candlesUpdatedListener.Start();
             }
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cqrs engine ...");

@@ -9,20 +9,11 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <NoWarn>1701;1702;1705;1591</NoWarn>
-    <DocumentationFile>bin\Release\netcoreapp1.1\Lykke.Job.CandlesHistoryWriter.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>1701;1702;1705;1591</NoWarn>
-    <DocumentationFile>bin\Debug\netcoreapp1.1\Lykke.Job.CandlesHistoryWriter.xml</DocumentationFile>
-  </PropertyGroup>
-
   <Target Name="CopySerilogConfig" AfterTargets="AfterBuild">
     <Copy SourceFiles="appsettings.Serilog.json" DestinationFolder="$(OutDir)" />
   </Target>
-  <Target Name="CopySerilogConfigOnPublish" AfterTargets="Publish">
+  <Target
+    Name="CopySerilogConfigOnPublish" AfterTargets="Publish">
     <Copy SourceFiles="appsettings.Serilog.json" DestinationFolder="$(PublishDir)" />
   </Target>
 
@@ -47,9 +38,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Lykke.Job.CandleHistoryWriter.Repositories.csproj" />
+    <ProjectReference
+      Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Lykke.Job.CandleHistoryWriter.Repositories.csproj" />
     <ProjectReference Include="..\Lykke.Job.CandlesHistoryWriter.Core\Lykke.Job.CandlesHistoryWriter.Core.csproj" />
-    <ProjectReference Include="..\Lykke.Job.CandlesHistoryWriter.Services\Lykke.Job.CandlesHistoryWriter.Services.csproj" />
+    <ProjectReference
+      Include="..\Lykke.Job.CandlesHistoryWriter.Services\Lykke.Job.CandlesHistoryWriter.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,14 +52,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
+    <None Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Scripts\**" CopyToOutputDirectory="PreserveNewest"
+      LinkBase="Scripts" />
   </ItemGroup>
 
-  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-    <ItemGroup>
-      <DocFile Include="bin\*\*\Lykke.Job.CandlesHistoryWriter.xml" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DocFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />
-  </Target>
+  <ItemGroup>
+    <PackageVersion Update="Lykke.MarginTrading.CorporateActions.Broker.Contracts" Version="1.9.3" />
+  </ItemGroup>
 
 </Project>

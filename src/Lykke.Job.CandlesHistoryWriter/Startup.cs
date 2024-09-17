@@ -33,6 +33,7 @@ using Lykke.Snow.Common.Startup.Hosting;
 using MarginTrading.SettingsService.Contracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Microsoft.ApplicationInsights.Extensibility;
 
 namespace Lykke.Job.CandlesHistoryWriter
 {
@@ -40,7 +41,7 @@ namespace Lykke.Job.CandlesHistoryWriter
     public class Startup
     {
         private IReloadingManager<AppSettings> _mtSettingsManager;
-        
+
         private CandlesShardRemoteSettings _candlesShardSettings;
         private IWebHostEnvironment Environment { get; }
         private ILifetimeScope ApplicationContainer { get; set; }
@@ -77,9 +78,9 @@ namespace Lykke.Job.CandlesHistoryWriter
 
                 services.AddSwaggerGen(options =>
                 {
-                    options.SwaggerDoc(ApiVersion, new OpenApiInfo {Version = ApiVersion, Title = ApiTitle});
+                    options.SwaggerDoc(ApiVersion, new OpenApiInfo { Version = ApiVersion, Title = ApiTitle });
                 });
-                
+
                 LoadConfiguration();
 
                 Log = CreateLog(Configuration, GetRelevantCandlesHistoryWriterSettings());
@@ -88,8 +89,11 @@ namespace Lykke.Job.CandlesHistoryWriter
                 var correlationContextAccessor = new CorrelationContextAccessor();
                 services.AddSingleton(correlationContextAccessor);
                 services.AddSingleton<CqrsCorrelationManager>();
-                
+
                 services.AddApplicationInsightsTelemetry();
+#if DEBUG
+                services.Configure<TelemetryConfiguration>(x => x.DisableTelemetry = true);
+#endif
             }
             catch (Exception ex)
             {
@@ -131,7 +135,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                 .GetResult();
 
             _candlesShardSettings =
-                new CandlesShardRemoteSettings {Name = remoteSettings.Name, Pattern = remoteSettings.Pattern};
+                new CandlesShardRemoteSettings { Name = remoteSettings.Name, Pattern = remoteSettings.Pattern };
         }
 
         [UsedImplicitly]
@@ -140,11 +144,11 @@ namespace Lykke.Job.CandlesHistoryWriter
             var marketType = _mtSettingsManager.CurrentValue.CandlesHistoryWriter != null
                 ? MarketType.Spot
                 : MarketType.Mt;
-            
+
             var candlesHistoryWriter = _mtSettingsManager.CurrentValue.CandlesHistoryWriter != null
                 ? _mtSettingsManager.Nested(x => x.CandlesHistoryWriter)
                 : _mtSettingsManager.Nested(x => x.MtCandlesHistoryWriter);
-            
+
             builder.RegisterModule(new JobModule(
                 marketType,
                 candlesHistoryWriter.CurrentValue,
@@ -154,7 +158,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                 candlesHistoryWriter.Nested(x => x.Db),
                 _candlesShardSettings,
                 Log));
-            
+
             builder.RegisterModule(new CqrsModule(_mtSettingsManager.CurrentValue.MtCandlesHistoryWriter.Cqrs, Log));
         }
 
@@ -164,21 +168,22 @@ namespace Lykke.Job.CandlesHistoryWriter
             try
             {
                 ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
-                
+
                 if (env.IsDevelopment())
                 {
                     app.UseDeveloperExceptionPage();
                 }
-                
+
                 app.UseLykkeMiddleware(nameof(Startup), ex => ErrorResponse.Create("Technical problem"), false, false);
 
                 app.UseRouting();
-                app.UseEndpoints(endpoints => {
+                app.UseEndpoints(endpoints =>
+                {
                     endpoints.MapControllers();
                 });
                 app.UseSwagger(c =>
                 {
-                    c.PreSerializeFilters.Add((swagger, httpReq) => 
+                    c.PreSerializeFilters.Add((swagger, httpReq) =>
                         swagger.Servers =
                             new List<OpenApiServer>
                             {
