@@ -1,3 +1,9 @@
+## 2.12.0 - Nova 2. Delivery 46 (September 26, 2024)
+### What's changed
+* LT-5602: Migrate to net 8.
+* LT-5517: Update rabbitmq broker library with new rabbitmq.client and templates.
+
+
 ## 2.11.0 - Nova 2. Delivery 45 (September 02, 2024)
 ### What's changed
 * LT-5672: Redis timeout.
