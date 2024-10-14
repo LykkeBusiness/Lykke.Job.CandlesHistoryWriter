@@ -1,24 +1,32 @@
 ﻿using System.Threading.Tasks;
+using Lykke.Common.Api.Contract.Responses;
 using Lykke.Job.CandlesHistoryWriter.Core.Services;
+using Lykke.Job.CandlesHistoryWriter.Services;
 using Lykke.Job.CandlesProducer.Contract;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Lykke.Job.CandlesHistoryWriter.Controllers
+namespace Lykke.Job.CandlesHistoryWriter.Controllers;
+
+[Route("api/[controller]")]
+public class PoisonController : Controller
 {
-    [Route("api/[controller]")]
-    public class PoisonController : Controller
+    private readonly IRabbitPoisonHandlingService<CandlesUpdatedEvent> _rabbitPoisonHandingService;
+
+    public PoisonController(IRabbitPoisonHandlingService<CandlesUpdatedEvent> rabbitPoisonHandingService)
     {
-        private readonly IRabbitPoisonHandingService<CandlesUpdatedEvent> _rabbitPoisonHandingService;
+        _rabbitPoisonHandingService = rabbitPoisonHandingService;
+    }
 
-        public PoisonController(IRabbitPoisonHandingService<CandlesUpdatedEvent> rabbitPoisonHandingService)
+    [HttpPost("put-messages-back")]
+    public async Task<IActionResult> PutMessagesBack()
+    {
+        try
         {
-            _rabbitPoisonHandingService = rabbitPoisonHandingService;
+            return Ok(await _rabbitPoisonHandingService.PutMessagesBack());
         }
-
-        [HttpPost("put-messages-back")]
-        public async Task<string> PutMessagesBack()
+        catch (ProcessAlreadyStartedException ex)
         {
-            return await _rabbitPoisonHandingService.PutMessagesBack();
+            return Conflict(ErrorResponse.Create(ex.Message));
         }
     }
 }
