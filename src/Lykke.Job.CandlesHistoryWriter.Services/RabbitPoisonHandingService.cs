@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Log;
@@ -53,23 +52,16 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
 
                 _connection = factory.CreateConnection();
 
-                var publishingChannel = _connection.CreateModel();
-                var subscriptionChannel = _connection.CreateModel();
-                _channels.AddRange(new[] { publishingChannel, subscriptionChannel });
+                var originalQueueChannel = _connection.CreateModel();
+                var poisonQueueChannel = _connection.CreateModel();
+                _channels.AddRange([originalQueueChannel, poisonQueueChannel]);
 
-                var publishingArgs = new Dictionary<string, object>()
-                {
-                    {"x-dead-letter-exchange", _subscriptionSettings.DeadLetterExchangeName}
-                };
+                var queueDeclareOk = poisonQueueChannel.QueueDeclarePassive(PoisonQueueName);
 
-                subscriptionChannel.QueueDeclare(PoisonQueueName,
-                    _subscriptionSettings.IsDurable, false, false, null);
-
-                var messagesFound = subscriptionChannel.MessageCount(PoisonQueueName);
                 var processedMessages = 0;
                 var result = "Undefined";
 
-                if (messagesFound == 0)
+                if (queueDeclareOk.MessageCount == 0)
                 {
                     result = "No messages found in poison queue. Terminating the process.";
 
@@ -81,13 +73,16 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
                 else
                 {
                     await _log.WriteInfoAsync(nameof(RabbitPoisonHandingService<T>), nameof(PutMessagesBack),
-                        $"{messagesFound} messages found in poison queue. Starting the process.");
+                        $"{queueDeclareOk.MessageCount} messages found in poison queue. Starting the process.");
                 }
 
-                publishingChannel.QueueDeclare(_subscriptionSettings.QueueName,
-                    _subscriptionSettings.IsDurable, false, false, publishingArgs);
+                var publishingArgs = new Dictionary<string, object>()
+                {
+                    {"x-dead-letter-exchange", _subscriptionSettings.DeadLetterExchangeName}
+                };
+                originalQueueChannel.QueueDeclarePassive(_subscriptionSettings.QueueName);
 
-                var consumer = new EventingBasicConsumer(subscriptionChannel);
+                var consumer = new EventingBasicConsumer(poisonQueueChannel);
                 consumer.Received += (ch, ea) =>
                 {
                     var message = RepackMessage(ea.Body.ToArray());
@@ -99,14 +94,14 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
                             IBasicProperties properties = null;
                             if (!string.IsNullOrEmpty(_subscriptionSettings.RoutingKey))
                             {
-                                properties = publishingChannel.CreateBasicProperties();
+                                properties = originalQueueChannel.CreateBasicProperties();
                                 properties.Type = _subscriptionSettings.RoutingKey;
                             }
 
-                            publishingChannel.BasicPublish(_subscriptionSettings.ExchangeName,
+                            originalQueueChannel.BasicPublish(_subscriptionSettings.ExchangeName,
                                 _subscriptionSettings.RoutingKey ?? "", properties, message);
 
-                            subscriptionChannel.BasicAck(ea.DeliveryTag, false);
+                            poisonQueueChannel.BasicAck(ea.DeliveryTag, false);
 
                             processedMessages++;
                         }
@@ -120,13 +115,13 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
                 var sw = new Stopwatch();
                 sw.Start();
 
-                var tag = subscriptionChannel.BasicConsume(PoisonQueueName, false,
+                var tag = poisonQueueChannel.BasicConsume(PoisonQueueName, false,
                     consumer);
 
                 await _log.WriteInfoAsync(nameof(RabbitPoisonHandingService<T>), nameof(PutMessagesBack),
                     $"Consumer {tag} started.");
 
-                while (processedMessages < messagesFound)
+                while (processedMessages < queueDeclareOk.MessageCount)
                 {
                     Thread.Sleep(100);
 
@@ -139,11 +134,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
                     }
                 }
 
-                result = $"Messages resend finished. Initial number of messages {messagesFound}. Processed number of messages {processedMessages}";
+                result = $"Messages resend finished. Initial number of messages {queueDeclareOk.MessageCount}. Processed number of messages {processedMessages}";
 
                 await _log.WriteInfoAsync(nameof(RabbitPoisonHandingService<T>), nameof(PutMessagesBack), result);
-
-                FreeResources();
 
                 return result;
             }
@@ -155,6 +148,10 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
                 await _log.WriteErrorAsync(nameof(RabbitPoisonHandingService<T>), nameof(PutMessagesBack), result, exception);
 
                 return result;
+            }
+            finally
+            {
+                FreeResources();
             }
         }
 
