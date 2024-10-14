@@ -102,7 +102,7 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             RegisterAssets(builder);
             RegisterCandles(builder);
 
-            _services.AddSingleton<IRabbitPoisonHandingService<CandlesUpdatedEvent>>(provider => new RabbitPoisonHandingService<CandlesUpdatedEvent>(
+            _services.AddSingleton<IRabbitPoisonHandlingService<CandlesUpdatedEvent>>(provider => new RabbitPoisonHandlingService<CandlesUpdatedEvent>(
                 provider.GetService<ILog>(),
                 _subscriptionSettings));
 

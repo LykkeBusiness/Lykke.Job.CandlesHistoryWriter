@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Lykke.Job.CandlesHistoryWriter.Core.Services
 {
-    public interface IRabbitPoisonHandingService<T> where T : class
+    public interface IRabbitPoisonHandlingService<T> where T : class
     {
         Task<string> PutMessagesBack();
     }
