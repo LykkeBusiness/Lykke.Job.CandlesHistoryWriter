@@ -23,6 +23,7 @@
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" />
     <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" />
     <PackageReference Include="Lykke.Service.Assets.Client" />
+    <PackageReference Include="Lykke.Snow.Common" />
     <PackageReference Include="Lykke.Snow.Common.Startup" />
     <PackageReference Include="LykkeBiz.Common" />
     <PackageReference Include="LykkeBiz.HttpClientGenerator" />

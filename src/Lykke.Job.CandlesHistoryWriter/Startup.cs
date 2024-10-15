@@ -216,8 +216,6 @@ namespace Lykke.Job.CandlesHistoryWriter
         {
             try
             {
-                ApplicationContainer.Resolve<AssemblyLogger>().StartLogging();
-
                 await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
                 
                 Program.AppHost.WriteLogs(Environment, Log);
