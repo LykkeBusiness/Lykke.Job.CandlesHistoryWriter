@@ -25,6 +25,7 @@ using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
+using Lykke.Snow.Common.AssemblyLogging;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Cqrs;
 using Microsoft.Extensions.Logging;
@@ -67,6 +68,7 @@ namespace Lykke.Job.CandlesHistoryWriter
         {
             try
             {
+                services.AddAssemblyLogger();
                 services
                     .AddControllers()
                     .AddNewtonsoftJson(options =>
@@ -215,7 +217,7 @@ namespace Lykke.Job.CandlesHistoryWriter
             try
             {
                 await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
-
+                
                 Program.AppHost.WriteLogs(Environment, Log);
 
                 await Log.WriteMonitorAsync(nameof(Startup), nameof(StartApplication), "", "Started");
