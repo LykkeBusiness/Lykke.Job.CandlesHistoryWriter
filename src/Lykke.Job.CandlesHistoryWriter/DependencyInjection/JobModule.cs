@@ -38,6 +38,7 @@ using Lykke.Job.CandlesProducer.Contract;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.RabbitMqBroker.Subscriber.MessageReadStrategies;
+using Microsoft.Extensions.Logging;
 
 namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 {
@@ -111,7 +112,8 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
                             PoisonQueueName.Create(_subscriptionSettings.QueueName),
                             ExchangeName.Create(_subscriptionSettings.ExchangeName),
                             RoutingKey.Create(_subscriptionSettings.RoutingKey)
-                        ))));
+                        ),
+                        p.GetRequiredService<ILoggerFactory>())));
 
             builder.Populate(_services);
         }
