@@ -8,6 +8,7 @@ using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher.Serializers;
 using Lykke.RabbitMqBroker.Subscriber.Deserializers;
+using MessagePack;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -19,7 +20,7 @@ public class RabbitPoisonHandlingService<T> : IRabbitPoisonHandlingService<T>, I
     private readonly RabbitMqSubscriptionSettings _subscriptionSettings;
 
     private readonly IMessageDeserializer<T> _messageDeserializer = new MessagePackMessageDeserializer<T>();
-    private readonly IRabbitMqSerializer<T> _messageSerializer = new MessagePackMessageSerializer<T>();
+    private readonly IRabbitMqSerializer<T> _messageSerializer = new MessagePackMessageSerializer<T>((IFormatterResolver)null);
 
     private readonly List<IModel> _channels = new List<IModel>();
     private IConnection _connection;
