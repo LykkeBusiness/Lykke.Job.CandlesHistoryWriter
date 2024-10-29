@@ -12,7 +12,7 @@
     <PackageVersion Include="Lykke.Job.CandlesProducer.Contract" Version="5.1.0" />
     <PackageVersion Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="2.0.0" />
     <PackageVersion Include="Lykke.MarginTrading.CorporateActions.Broker.Contracts" Version="1.10.0" />
-    <PackageVersion Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.5.0" />
+    <PackageVersion Include="Lykke.MarginTrading.AssetService.Contracts" Version="13.1.0" />
     <PackageVersion Include="Lykke.Service.Assets.Client" Version="4.0.1" />
     <PackageVersion Include="Lykke.Snow.Common.Startup" Version="4.2.0" />
     <PackageVersion Include="LykkeBiz.Common.ApiLibrary" Version="5.0.0" />

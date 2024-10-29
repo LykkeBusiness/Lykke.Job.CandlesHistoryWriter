@@ -21,7 +21,7 @@
     <PackageReference Include="Lykke.MarginTrading.CorporateActions.Broker.Contracts" />
     <PackageReference Include="LykkeBiz.Common.ApiLibrary" />
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" />
-    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" />
+    <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" />
     <PackageReference Include="Lykke.Service.Assets.Client" />
     <PackageReference Include="Lykke.Snow.Common.Startup" />
     <PackageReference Include="LykkeBiz.Common" />
