@@ -9,7 +9,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 using StackExchange.Redis;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles

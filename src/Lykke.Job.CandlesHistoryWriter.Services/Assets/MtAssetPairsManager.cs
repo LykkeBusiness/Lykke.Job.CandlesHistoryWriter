@@ -8,9 +8,10 @@ using System.Linq;
 using Common.Log;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.Assets.Client.Models;
-using MarginTrading.SettingsService.Contracts;
 using Polly;
 using System;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.AssetPair;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Assets
 {
@@ -55,7 +56,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Assets
                 .ExecuteAsync(async () => (await _apiService.List()).Select(pair => MapAssetPair(pair)));
         }
 
-        public AssetPair MapAssetPair(MarginTrading.SettingsService.Contracts.AssetPair.AssetPairContract pair)
+        public AssetPair MapAssetPair(AssetPairContract pair)
         {
             return new AssetPair
             {

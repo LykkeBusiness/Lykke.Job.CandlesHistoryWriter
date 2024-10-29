@@ -8,7 +8,6 @@ using AzureStorage.Blob;
 using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Common;
-using MarginTrading.SettingsService.Contracts;
 using Lykke.HttpClientGenerator;
 using Lykke.Job.CandleHistoryWriter.Repositories.Candles;
 using Lykke.Job.CandleHistoryWriter.Repositories.Cleanup;
@@ -39,6 +38,7 @@ using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.RabbitMqBroker.Subscriber.MessageReadStrategies;
 using Microsoft.Extensions.Logging;
+using MarginTrading.AssetService.Contracts;
 
 namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 {
