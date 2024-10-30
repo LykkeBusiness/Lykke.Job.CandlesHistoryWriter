@@ -56,8 +56,4 @@
       LinkBase="Scripts" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageVersion Update="Lykke.MarginTrading.CorporateActions.Broker.Contracts" Version="1.9.3" />
-  </ItemGroup>
-
 </Project>
