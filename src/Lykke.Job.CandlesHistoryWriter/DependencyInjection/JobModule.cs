@@ -2,8 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Blob;
@@ -39,6 +37,7 @@ using Moq;
 using Lykke.Job.CandlesProducer.Contract;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.RabbitMqBroker.Subscriber.MessageReadStrategies;
 
 namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
 {
@@ -100,11 +99,19 @@ namespace Lykke.Job.CandlesHistoryWriter.DependencyInjection
             RegisterRedis(builder);
 
             RegisterAssets(builder);
+
             RegisterCandles(builder);
 
-            _services.AddSingleton<IRabbitPoisonHandlingService<CandlesUpdatedEvent>>(provider => new RabbitPoisonHandlingService<CandlesUpdatedEvent>(
-                provider.GetService<ILog>(),
-                _subscriptionSettings));
+            _services.AddSingleton<IPoisonQueueHandler, ParallelExecutionGuardPoisonQueueDecorator>(p =>
+                new ParallelExecutionGuardPoisonQueueDecorator(
+                    new PoisonQueueHandler(
+                        _subscriptionSettings.ConnectionString,
+                        p.GetService<IConnectionProvider>(),
+                        PoisonQueueConsumerConfigurationOptions.Create(
+                            PoisonQueueName.Create(_subscriptionSettings.QueueName),
+                            ExchangeName.Create(_subscriptionSettings.ExchangeName),
+                            RoutingKey.Create(_subscriptionSettings.RoutingKey)
+                        ))));
 
             builder.Populate(_services);
         }
