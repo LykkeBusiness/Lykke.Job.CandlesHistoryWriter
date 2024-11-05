@@ -31,7 +31,6 @@
     <PackageReference Include="LykkeBiz.RabbitMqBroker" />
     <PackageReference Include="LykkeBiz.SettingsReader" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
