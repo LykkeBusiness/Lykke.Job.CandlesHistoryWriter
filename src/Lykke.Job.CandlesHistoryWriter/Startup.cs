@@ -31,7 +31,7 @@ using Lykke.Snow.Common.Correlation.Cqrs;
 using Microsoft.Extensions.Logging;
 using Lykke.Snow.Common.Startup.Log;
 using Lykke.Snow.Common.Startup.Hosting;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.ApplicationInsights.Extensibility;

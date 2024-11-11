@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" />
-    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" />
+    <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" />
     <PackageReference Include="LykkeBiz.RabbitMqBroker" />
     <PackageReference Include="LykkeBiz.SettingsReader" />
     <PackageReference Include="LykkeBiz.Snow.Cqrs" />

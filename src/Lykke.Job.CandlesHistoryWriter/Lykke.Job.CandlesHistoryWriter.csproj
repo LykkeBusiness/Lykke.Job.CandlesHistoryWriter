@@ -21,7 +21,7 @@
     <PackageReference Include="Lykke.MarginTrading.CorporateActions.Broker.Contracts" />
     <PackageReference Include="LykkeBiz.Common.ApiLibrary" />
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" />
-    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" />
+    <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" />
     <PackageReference Include="Lykke.Service.Assets.Client" />
     <PackageReference Include="Lykke.Snow.Common" />
     <PackageReference Include="Lykke.Snow.Common.Startup" />
@@ -32,7 +32,6 @@
     <PackageReference Include="LykkeBiz.RabbitMqBroker" />
     <PackageReference Include="LykkeBiz.SettingsReader" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
@@ -55,10 +54,6 @@
   <ItemGroup>
     <None Include="..\Lykke.Job.CandleHistoryWriter.Repositories\Scripts\**" CopyToOutputDirectory="PreserveNewest"
       LinkBase="Scripts" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageVersion Update="Lykke.MarginTrading.CorporateActions.Broker.Contracts" Version="1.9.3" />
   </ItemGroup>
 
 </Project>

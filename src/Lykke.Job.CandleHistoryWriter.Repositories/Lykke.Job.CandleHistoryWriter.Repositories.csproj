@@ -10,7 +10,6 @@
     <PackageReference Include="Dapper" />
     <PackageReference Include="Lykke.AzureStorage" />
     <PackageReference Include="LykkeBiz.Logs.MsSql" />
-    <PackageReference Include="MessagePack" />
     <PackageReference Include="Polly" />
   </ItemGroup>
 
