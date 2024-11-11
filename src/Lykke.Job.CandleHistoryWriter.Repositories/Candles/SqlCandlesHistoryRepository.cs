@@ -110,12 +110,12 @@ namespace Lykke.Job.CandleHistoryWriter.Repositories.Candles
                 new UpdateOldWeeklyCandlesCommand(rFactor, rFactorDate),
             };
 
-            if (!CandlesHistoryWriter.Core.Domain.Candles.DateTimeExtensions.SameWeek(rFactorDate, lastTradingDay, DayOfWeek.Monday))
+            if (!rFactorDate.SameWeek(lastTradingDay, DayOfWeek.Monday))
             {
                 commands.Add(new UpdateBrokenWeeklyCandlesCommand(rFactor, rFactorDate));
             }
 
-            if (!CandlesHistoryWriter.Core.Domain.Candles.DateTimeExtensions.SameMonth(rFactorDate, lastTradingDay))
+            if (!rFactorDate.SameMonth(lastTradingDay))
             {
                 commands.Add(new UpdateBrokenMonthlyCandlesCommand(rFactor, rFactorDate));
             }
