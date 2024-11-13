@@ -1,7 +1,9 @@
 [![.NET](https://github.com/LykkeBusiness/Lykke.Job.CandlesHistoryWriter/actions/workflows/build.yml/badge.svg)](https://github.com/LykkeBusiness/Lykke.Job.CandlesHistoryWriter/actions/workflows/build.yml)
 
-# Lykke.Service.CandlesHistory
+# Lykke.Job.CandlesHistoryWriter
 
-Provide real-time market candles history
+### Settings ###
 
-Client library Nuget: https://www.nuget.org/packages/Lykke.Service.CandlesHistory.Client/
+Settings schema is:
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./template.json) -->
+<!-- MARKDOWN-AUTO-DOCS:END -->
