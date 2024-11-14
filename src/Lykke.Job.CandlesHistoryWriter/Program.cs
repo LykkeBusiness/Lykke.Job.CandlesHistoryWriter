@@ -43,10 +43,15 @@ namespace Lykke.Job.CandlesHistoryWriter
 
             try
             {
-                var configuration = new ConfigurationBuilder()
-                    .AddHttpSourceConfiguration()
-                    .AddEnvironmentVariables()
-                    .Build();
+                var configurationBuilder = new ConfigurationBuilder()
+                    .AddEnvironmentVariables();
+
+                if (Environment.GetEnvironmentVariable("SettingsUrl")?.StartsWith("http") ?? false)
+                {
+                    configurationBuilder.AddHttpSourceConfiguration();
+                }
+
+                var configuration = configurationBuilder.Build();
 
                 AppHost = Host.CreateDefaultBuilder()
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
