@@ -60,7 +60,6 @@ namespace Lykke.Job.CandlesHistoryWriter
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("env.json", true)
                 .AddSerilogJson(env)
-                .AddHttpSourceConfiguration()
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
             Environment = env;
