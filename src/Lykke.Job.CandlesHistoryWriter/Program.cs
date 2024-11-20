@@ -6,7 +6,9 @@ using System.IO;
 using System.Threading.Tasks;
 using Autofac.Extensions.DependencyInjection;
 using JetBrains.Annotations;
+using Lykke.SettingsReader.ConfigurationProvider;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace Lykke.Job.CandlesHistoryWriter
@@ -41,6 +43,16 @@ namespace Lykke.Job.CandlesHistoryWriter
 
             try
             {
+                var configurationBuilder = new ConfigurationBuilder()
+                    .AddEnvironmentVariables();
+
+                if (Environment.GetEnvironmentVariable("SettingsUrl")?.StartsWith("http") ?? false)
+                {
+                    configurationBuilder.AddHttpSourceConfiguration();
+                }
+
+                var configuration = configurationBuilder.Build();
+
                 AppHost = Host.CreateDefaultBuilder()
                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                     .ConfigureWebHostDefaults(webBuilder =>
@@ -50,6 +62,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                                 // Set properties and call methods on options
                             })
                             .UseUrls("http://*:5000")
+                            .UseConfiguration(configuration)
                             .UseContentRoot(Directory.GetCurrentDirectory())
                             .UseStartup<Startup>();
                     })

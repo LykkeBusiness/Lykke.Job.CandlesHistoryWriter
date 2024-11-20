@@ -25,6 +25,8 @@ using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
+using Lykke.SettingsReader.ConfigurationProvider;
+using Lykke.SettingsReader.SettingsTemplate;
 using Lykke.Snow.Common.AssemblyLogging;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Cqrs;
@@ -96,6 +98,7 @@ namespace Lykke.Job.CandlesHistoryWriter
 #if DEBUG
                 services.Configure<TelemetryConfiguration>(x => x.DisableTelemetry = true);
 #endif
+                services.AddSettingsTemplateGenerator();
             }
             catch (Exception ex)
             {
@@ -182,6 +185,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
+                    endpoints.MapSettingsTemplate();
                 });
                 app.UseSwagger(c =>
                 {
@@ -217,7 +221,7 @@ namespace Lykke.Job.CandlesHistoryWriter
             try
             {
                 await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
-                
+
                 Program.AppHost.WriteLogs(Environment, Log);
 
                 await Log.WriteMonitorAsync(nameof(Startup), nameof(StartApplication), "", "Started");
