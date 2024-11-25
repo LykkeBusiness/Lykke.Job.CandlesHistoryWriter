@@ -1,3 +1,10 @@
+## 2.13.0 - Nova 2. Delivery 47 (November 15, 2024)
+### What's changed
+* LT-5853: Update messagepack to 2.x version.
+* LT-5782: Add assembly load logger.
+* LT-5759: Migrate to quorum queues.
+
+
 ## 2.12.0 - Nova 2. Delivery 46 (September 26, 2024)
 ### What's changed
 * LT-5602: Migrate to net 8.
