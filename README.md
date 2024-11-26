@@ -11,14 +11,12 @@ Settings schema is:
 {
   "APP_UID": "Integer",
   "ASPNETCORE_ENVIRONMENT": "String",
-  "ASPNETCORE_ENVIRONMENT_TEST1": "String",
   "Assets": {
     "ApiKey": "String",
     "CacheExpirationPeriod": "DateTime",
     "ServiceUrl": "String"
   },
   "ENVIRONMENT": "String",
-  "ENVIRONMENT_TEST1": "String",
   "ENV_INFO": "String",
   "Kestrel": {
     "EndPoints": {
