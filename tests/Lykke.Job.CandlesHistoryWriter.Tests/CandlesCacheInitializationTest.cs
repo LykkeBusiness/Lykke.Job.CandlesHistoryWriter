@@ -62,12 +62,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
             _assetPairsManagerMock = new Mock<IAssetPairsManager>();
             _candlesShardValidator = new Mock<ICandlesShardValidator>();
 
-            _assetPairs = new List<AssetPair>
-            {
-                new AssetPair {Id = "EURUSD", Accuracy = 3},
-                new AssetPair {Id = "USDCHF", Accuracy = 2},
-                new AssetPair {Id = "EURRUB", Accuracy = 2}
-            };
+            _assetPairs =
+            [
+                new AssetPair { Id = "EURUSD", Accuracy = 3 },
+                new AssetPair { Id = "USDCHF", Accuracy = 2 },
+                new AssetPair { Id = "EURRUB", Accuracy = 2 }
+            ];
 
             _assetPairsManagerMock
                 .Setup(m => m.GetAllEnabledAsync())
@@ -141,6 +141,31 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                     }
                 }
             }
+        }
+        
+        
+        [TestMethod]
+        public async Task CacheInitialization_WhenNetworkDisrupted_DoesAtLeastOneRetry()
+        {
+            // Arrange
+            _candlesShardValidator.Setup(x => x.CanHandle(It.IsAny<string>())).Returns(true);
+            
+            _cacheServiceMock.SetupSequence(x => x.InitializeAsync(
+                "test",
+                CandlePriceType.Ask,
+                CandleTimeInterval.Hour,
+                It.IsAny<IReadOnlyCollection<ICandle>>())
+            ).Throws(new Exception())
+            .Returns(Task.CompletedTask);
+            
+            // Act
+            await _service.InitializeCacheAsync("test");
+            
+            // Assert
+            _cacheServiceMock.Verify(x => x.InitializeAsync("test",
+                CandlePriceType.Ask,
+                CandleTimeInterval.Hour,
+                It.IsAny<IReadOnlyCollection<ICandle>>()), Times.Exactly(2));
         }
     }
 }
