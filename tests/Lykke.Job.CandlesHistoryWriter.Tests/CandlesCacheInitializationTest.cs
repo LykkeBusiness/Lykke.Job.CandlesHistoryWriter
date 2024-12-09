@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.Job.CandlesProducer.Contract;
 using Lykke.Service.Assets.Client.Models;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
@@ -141,6 +142,32 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                     }
                 }
             }
+        }
+        
+        
+        [TestMethod]
+        public async Task CacheInitialization_WhenNetworkDisrupted_DoesAtLeastOneRetry()
+        {
+            // Arrange
+            _candlesShardValidator.Setup(x => x.CanHandle(It.IsAny<string>())).Returns(true);
+            
+            var exception = new Exception();
+            _cacheServiceMock.SetupSequence(x => x.InitializeAsync(
+                "test",
+                CandlePriceType.Ask,
+                CandleTimeInterval.Hour,
+                It.IsAny<IReadOnlyCollection<ICandle>>())
+            ).Throws(exception)
+            .Returns(Task.CompletedTask);
+            
+            // Act
+            await _service.InitializeCacheAsync("test");
+            
+            // Assert
+            _cacheServiceMock.Verify(x => x.InitializeAsync("test",
+                CandlePriceType.Ask,
+                CandleTimeInterval.Hour,
+                It.IsAny<IReadOnlyCollection<ICandle>>()), Times.Exactly(2));
         }
     }
 }

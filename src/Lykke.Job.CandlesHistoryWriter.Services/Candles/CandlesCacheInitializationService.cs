@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.Job.CandlesProducer.Contract;
 using Lykke.Service.Assets.Client.Models;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
@@ -13,6 +14,8 @@ using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Assets;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using MoreLinq;
+using Polly;
+using Polly.Retry;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
@@ -113,6 +116,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 
             await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(InitializeCacheAsync), null, $"Caching {productId} candles history...");
 
+            var policy = CreateRetryPolicy(productId);
+            
             try
             {
                 foreach (var priceType in Constants.StoredPriceTypes)
@@ -122,8 +127,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                         var alignedToDate = now.TruncateTo(timeInterval).AddIntervalTicks(1, timeInterval);
                         var candlesAmountToStore = _candlesAmountManager.GetCandlesAmountToStore(timeInterval);
                         var candles = await _candlesHistoryRepository.GetLastCandlesAsync(productId, timeInterval, priceType, alignedToDate, candlesAmountToStore);
-
-                        await _candlesCacheService.InitializeAsync(productId, priceType, timeInterval, candles.ToArray());
+                        await policy.ExecuteAsync(async () => await _candlesCacheService.InitializeAsync(productId, priceType, timeInterval, candles.ToArray()));
                     }
                 }
             }
@@ -137,6 +141,16 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 await _log.WriteInfoAsync(nameof(CandlesCacheInitializationService), nameof(CacheAssetPairCandlesAsync), null,
                     $"{productId} candles history caching finished");
             }
+        }
+
+        private AsyncRetryPolicy CreateRetryPolicy(string productId)
+        {
+            var policy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(3,
+                    x => TimeSpan.FromMilliseconds(x * 1000),
+                    (exception, _) => _log.Info($"Caching {productId} candles history: retry"));
+            return policy;
         }
     }
 }
