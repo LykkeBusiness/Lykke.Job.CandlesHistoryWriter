@@ -7,7 +7,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
-using Lykke.Common.Log;
 using Lykke.Job.CandlesProducer.Contract;
 using Lykke.Service.Assets.Client.Models;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
@@ -63,12 +62,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
             _assetPairsManagerMock = new Mock<IAssetPairsManager>();
             _candlesShardValidator = new Mock<ICandlesShardValidator>();
 
-            _assetPairs = new List<AssetPair>
-            {
-                new AssetPair {Id = "EURUSD", Accuracy = 3},
-                new AssetPair {Id = "USDCHF", Accuracy = 2},
-                new AssetPair {Id = "EURRUB", Accuracy = 2}
-            };
+            _assetPairs =
+            [
+                new AssetPair { Id = "EURUSD", Accuracy = 3 },
+                new AssetPair { Id = "USDCHF", Accuracy = 2 },
+                new AssetPair { Id = "EURRUB", Accuracy = 2 }
+            ];
 
             _assetPairsManagerMock
                 .Setup(m => m.GetAllEnabledAsync())
@@ -151,13 +150,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
             // Arrange
             _candlesShardValidator.Setup(x => x.CanHandle(It.IsAny<string>())).Returns(true);
             
-            var exception = new Exception();
             _cacheServiceMock.SetupSequence(x => x.InitializeAsync(
                 "test",
                 CandlePriceType.Ask,
                 CandleTimeInterval.Hour,
                 It.IsAny<IReadOnlyCollection<ICandle>>())
-            ).Throws(exception)
+            ).Throws(new Exception())
             .Returns(Task.CompletedTask);
             
             // Act

@@ -147,9 +147,14 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
         {
             var policy = Policy
                 .Handle<Exception>()
-                .WaitAndRetryAsync(3,
-                    x => TimeSpan.FromMilliseconds(x * 1000),
-                    (exception, _) => _log.Info($"Caching {productId} candles history: retry"));
+                .WaitAndRetryAsync(7,
+                    /*
+                        last known initialization time of candles in BBVA is 190 seconds. we need to retry longer
+                        redis timeout is 5 seconds, so
+                        7 attempts means 2^1 +...+ 2^7 + 7*5=289 which is > 190
+                    */
+                    x => TimeSpan.FromSeconds(Math.Pow(2, x)),
+                    (exception, _) => _log.Info($"Caching {productId} candles history: retry."));
             return policy;
         }
     }
