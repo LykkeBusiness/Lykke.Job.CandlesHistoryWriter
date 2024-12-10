@@ -49,11 +49,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
         private Mock<IAssetPairsManager> _assetPairsManagerMock;
         private Mock<ICandlesShardValidator> _candlesShardValidator;
         private List<AssetPair> _assetPairs;
+        private Mock<ILog> _logMock;
 
         [TestInitialize]
         public void InitializeTest()
         {
-            var logMock = new Mock<ILog>();
+            _logMock = new Mock<ILog>();
 
             _dateTimeProviderMock = new Mock<IClock>();
             _cacheServiceMock = new Mock<ICandlesCacheService>();
@@ -77,13 +78,14 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 .ReturnsAsync((string assetPairId) => _assetPairs.SingleOrDefault(a => a.Id == assetPairId));
 
             _service = new CandlesCacheInitializationService(
-                logMock.Object,
+                _logMock.Object,
                 _assetPairsManagerMock.Object,
                 _dateTimeProviderMock.Object,
                 _cacheServiceMock.Object,
                 _historyRepositoryMock.Object,
                 _candlesAmountManagerMock.Object,
                 _candlesShardValidator.Object,
+                null,
                 null);
         }
 
@@ -162,6 +164,42 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
             await _service.InitializeCacheAsync("test");
             
             // Assert
+            _cacheServiceMock.Verify(x => x.InitializeAsync("test",
+                CandlePriceType.Ask,
+                CandleTimeInterval.Hour,
+                It.IsAny<IReadOnlyCollection<ICandle>>()), Times.Exactly(2));
+        }
+        
+        [TestMethod]
+        public async Task CacheInitialization_WhenSingleRetryAndTwoExceptionsInRow_Throws()
+        {
+            // Arrange
+            _candlesShardValidator.Setup(x => x.CanHandle(It.IsAny<string>())).Returns(true);
+            
+            _cacheServiceMock.SetupSequence(x => x.InitializeAsync(
+                    "test",
+                    CandlePriceType.Ask,
+                    CandleTimeInterval.Hour,
+                    It.IsAny<IReadOnlyCollection<ICandle>>())
+                )
+                .Throws(new Exception())
+                .Throws(new Exception())
+                .Returns(Task.CompletedTask);
+            
+            var service = new CandlesCacheInitializationService(
+                _logMock.Object,
+                _assetPairsManagerMock.Object,
+                _dateTimeProviderMock.Object,
+                _cacheServiceMock.Object,
+                _historyRepositoryMock.Object,
+                _candlesAmountManagerMock.Object,
+                _candlesShardValidator.Object,
+                null,
+                configuredCacheCandlesAssetsRetryCount: 1);
+            
+            // Act
+            // Assert
+            await Assert.ThrowsExceptionAsync<AggregateException>(async () => await service.InitializeCacheAsync("test"));
             _cacheServiceMock.Verify(x => x.InitializeAsync("test",
                 CandlePriceType.Ask,
                 CandleTimeInterval.Hour,

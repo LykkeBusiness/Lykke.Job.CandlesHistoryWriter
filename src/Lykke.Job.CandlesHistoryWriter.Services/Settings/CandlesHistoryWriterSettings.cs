@@ -39,6 +39,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Settings
         [Optional]
         public int? CacheCandlesAssetsBatchSize { get; set; }
 
+        /// <summary>
+        /// The number of retries if caching failed
+        /// </summary>
+        [Optional]
+        public int? CacheCandlesAssetsRetryCount { get; set; }
+
         [Optional]
         public bool UseSerilog { get; set; }
 
