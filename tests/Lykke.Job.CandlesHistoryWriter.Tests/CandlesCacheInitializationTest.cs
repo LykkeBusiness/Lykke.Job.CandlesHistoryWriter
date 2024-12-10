@@ -14,6 +14,7 @@ using Lykke.Job.CandlesHistoryWriter.Core.Services;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Assets;
 using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using Lykke.Job.CandlesHistoryWriter.Services.Candles;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -49,12 +50,12 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
         private Mock<IAssetPairsManager> _assetPairsManagerMock;
         private Mock<ICandlesShardValidator> _candlesShardValidator;
         private List<AssetPair> _assetPairs;
-        private Mock<ILog> _logMock;
+        private ILogger<CandlesCacheInitializationService> _logMock;
 
         [TestInitialize]
         public void InitializeTest()
         {
-            _logMock = new Mock<ILog>();
+            _logMock = new Mock<ILogger<CandlesCacheInitializationService>>().Object;
 
             _dateTimeProviderMock = new Mock<IClock>();
             _cacheServiceMock = new Mock<ICandlesCacheService>();
@@ -78,7 +79,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 .ReturnsAsync((string assetPairId) => _assetPairs.SingleOrDefault(a => a.Id == assetPairId));
 
             _service = new CandlesCacheInitializationService(
-                _logMock.Object,
+                _logMock,
                 _assetPairsManagerMock.Object,
                 _dateTimeProviderMock.Object,
                 _cacheServiceMock.Object,
@@ -187,7 +188,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 .Returns(Task.CompletedTask);
             
             var service = new CandlesCacheInitializationService(
-                _logMock.Object,
+                _logMock,
                 _assetPairsManagerMock.Object,
                 _dateTimeProviderMock.Object,
                 _cacheServiceMock.Object,
