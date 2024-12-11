@@ -6,10 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using DotNet.Testcontainers.Builders;
 using Lykke.Job.CandleHistoryWriter.Repositories.Candles;
 using Lykke.Job.CandleHistoryWriter.Repositories.Snapshots;
+using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesProducer.Contract;
 using Microsoft.Data.SqlClient;
 using Moq;
@@ -69,29 +71,42 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
         [Fact]
         public async Task InsertOrMerge_Inserts_InEmptyBaseFine()
         {
-            var now = DateTime.UtcNow;
-            
+            var now = DateTime.UtcNow.RoundToSecond();
+
+            ICandle snapshotCandleEntity = new SnapshotCandleEntity
+            {
+                AssetPairId = AssetName,
+                PriceType = CandlePriceType.Ask,
+                TimeInterval = CandleTimeInterval.Minute,
+                Timestamp = now,
+                Open = 0.5m,
+                Close = 0.7m,
+                High = 1m,
+                Low = 0.2m,
+                TradingVolume = 25m,
+                LastUpdateTimestamp = now,
+                LastTradePrice = 0.6m,
+                TradingOppositeVolume = 51m,
+            };
             await _repo.InsertOrMergeAsync([
-                new SnapshotCandleEntity
-                {
-                    AssetPairId = AssetName,
-                    PriceType = CandlePriceType.Ask,
-                    TimeInterval = CandleTimeInterval.Minute,
-                    Timestamp = now,
-                    Open = 0.5m,
-                    Close = 0.7m,
-                    High = 1m,
-                    Low = 0.2m,
-                    TradingVolume = 25m,
-                    LastUpdateTimestamp = now,
-                    LastTradePrice = 0.6m,
-                    TradingOppositeVolume = 51m,
-                }
+                snapshotCandleEntity
             ]);
 
             var candles = await _repo.GetCandlesAsync(CandlePriceType.Ask, CandleTimeInterval.Minute, now.AddSeconds(-1), now.AddSeconds(1));
-                
-            candles.Count().ShouldBe(1);
+
+            var candle = candles.Single();
+            candle.AssetPairId.ShouldBe(AssetName);
+            candle.PriceType.ShouldBe(CandlePriceType.Ask);
+            candle.TimeInterval.ShouldBe(CandleTimeInterval.Minute);
+            candle.Timestamp.ShouldBe(now);
+            candle.Open.ShouldBe(0.5);
+            candle.Close.ShouldBe(0.7);
+            candle.High.ShouldBe(1);
+            candle.Low.ShouldBe(0.2);
+            candle.TradingVolume.ShouldBe(25);
+            candle.LastUpdateTimestamp.ShouldBe(now);
+            candle.LastTradePrice.ShouldBe(0.6);
+            candle.TradingOppositeVolume.ShouldBe(51);
         }
         
         
