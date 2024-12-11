@@ -90,7 +90,7 @@ CREATE TABLE {0}(
                 if (conn.State == ConnectionState.Closed)
                     await conn.OpenAsync();
 
-                var transaction = conn.BeginTransaction(IsolationLevel.Serializable);
+                var transaction = conn.BeginTransaction();
                 try
                 {
                     var timestamp = _systemClock.UtcNow.UtcDateTime;
