@@ -18,6 +18,7 @@ using Moq;
 using Shouldly;
 using Testcontainers.MsSql;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
 {
@@ -29,9 +30,11 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
         private SqlAssetPairCandlesHistoryRepository _repo;
         private readonly MsSqlContainer _msSqlContainer;
         private Mock<ILog> _log;
+        private ITestOutputHelper _testOutputHelper;
 
-        public SqlAssetPairCandlesHistoryRepositoryTests()
+        public SqlAssetPairCandlesHistoryRepositoryTests(ITestOutputHelper testOutputHelper)
         {
+            _testOutputHelper = testOutputHelper;
             _msSqlContainer = new MsSqlBuilder()
                 .WithImage("rapidfort/microsoft-sql-server-2019-ib")
                 .WithEnvironment("ACCEPT_EULA", "Y")
@@ -138,6 +141,57 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
             candles.Count().ShouldBe(1);
             // exception is suppressed, so analyzing error logs
             _log.Verify(x => x.WriteErrorAsync(nameof(SqlAssetPairCandlesHistoryRepository), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Exception>(), null), Times.Never);
+        }
+             
+        [Fact(Skip = "Performance test")]
+        public async Task InsertOrMerge_PerformanceTest()
+        {
+            var now = DateTime.UtcNow;
+
+            var entity = new SnapshotCandleEntity
+            {
+                AssetPairId = AssetName,
+                PriceType = CandlePriceType.Ask,
+                TimeInterval = CandleTimeInterval.Minute,
+                Timestamp = now,
+                Open = 0.5m,
+                Close = 0.7m,
+                High = 1m,
+                Low = 0.2m,
+                TradingVolume = 25m,
+                LastUpdateTimestamp = now,
+                LastTradePrice = 0.6m,
+                TradingOppositeVolume = 51m,
+            };
+
+            var requests = new[] {10, 100, 1000, 5000, 6000, 10000};
+            foreach (var r in requests)
+            {
+                try
+                {
+                    var tasks = new List<Func<Task>>();
+                    for (var i = 0; i < r; i++)
+                    {
+                        tasks.Add(() => _repo.InsertOrMergeAsync([entity]));
+                    }
+
+                    var watch = System.Diagnostics.Stopwatch.StartNew();
+                    await Task.WhenAll(tasks.AsParallel().Select(async task => await task()));
+                    watch.Stop();
+                    var elapsedMs = watch.ElapsedMilliseconds;
+                    _testOutputHelper.WriteLine($"Execution time of {r} is :{elapsedMs} ms");
+                }
+                catch (Exception e)
+                {
+                    _testOutputHelper.WriteLine($"Execution time of {r} is unknown: {e.Message}");
+                }
+
+                var candles = await _repo.GetCandlesAsync(CandlePriceType.Ask, CandleTimeInterval.Minute, now.AddSeconds(-1), now.AddSeconds(1));
+                
+                candles.Count().ShouldBe(1);
+                // exception is suppressed, so analyzing error logs
+                _log.Verify(x => x.WriteErrorAsync(nameof(SqlAssetPairCandlesHistoryRepository), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Exception>(), null), Times.Never);
+            }
         }
     }
 }
