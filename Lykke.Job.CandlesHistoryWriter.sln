@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.Job.CandlesHistoryWriter.Tests.Integration", "tests\Lykke.Job.CandlesHistoryWriter.Tests.Integration\Lykke.Job.CandlesHistoryWriter.Tests.Integration.csproj", "{E1275389-389E-4F8A-A358-0FA65015988C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{97F51515-665B-4294-B5DD-349302783F7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97F51515-665B-4294-B5DD-349302783F7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97F51515-665B-4294-B5DD-349302783F7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1275389-389E-4F8A-A358-0FA65015988C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1275389-389E-4F8A-A358-0FA65015988C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1275389-389E-4F8A-A358-0FA65015988C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1275389-389E-4F8A-A358-0FA65015988C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -68,6 +74,7 @@ Global
 		{AE873376-3419-42BA-B5A4-7A4916D53EB0} = {83639B3B-EA4E-4ED4-B12B-D9953697F7E4}
 		{9582CE5D-66FC-4DA9-B5EE-FB1D3183FEEE} = {A557F1E2-1BF9-4B38-8F49-3E6B51D8E734}
 		{97F51515-665B-4294-B5DD-349302783F7F} = {03416325-9D48-41AC-BD4E-F25CDC93E1A0}
+		{E1275389-389E-4F8A-A358-0FA65015988C} = {A557F1E2-1BF9-4B38-8F49-3E6B51D8E734}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F526C520-34E8-4522-A17A-1F83BAB5BA9F}
