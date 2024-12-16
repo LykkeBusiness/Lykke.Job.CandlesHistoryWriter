@@ -103,7 +103,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair.Id, now)));
             }
             
-            _log.LogInformation("All candles history is cached");
+            _log.LogInformation("Candles history caching is finished.");
         }
 
         public async Task InitializeCacheAsync(string productId)
@@ -137,14 +137,17 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                         var candles = await _candlesHistoryRepository.GetLastCandlesAsync(productId, timeInterval, priceType, alignedToDate, candlesAmountToStore);
                         await policy.ExecuteAsync(async () => await _candlesCacheService.InitializeAsync(productId, priceType, timeInterval, candles.ToArray()));
                         
-                        _log.LogInformation($"{productId} candles history caching finished");
+                        _log.LogInformation($"{productId} candles history caching finished for interval `{timeInterval}` and price type `{priceType}`");
                     }
                 }
             }
             catch (Exception e)
             {
-                throw new AggregateException($"Couldn't cache candles history for asset pair [{productId}] after {_cacheCandlesAssetsRetryCount} retries. Restart required." + Environment.NewLine +
-                                             "Increase number of attempts in config if you see this second time. Every attempt increases wait time exponentially on a base of 2.", e);
+                var error = $"Couldn't cache candles history for asset pair [{productId}] after {_cacheCandlesAssetsRetryCount} retries. Restart required." + Environment.NewLine +
+                              "Increase number of attempts in config if you see this second time. Every attempt increases wait time exponentially on a base of 2.";
+                
+                _log.LogError(error, e);
+                throw new AggregateException(error, e);
             }
         }
 
