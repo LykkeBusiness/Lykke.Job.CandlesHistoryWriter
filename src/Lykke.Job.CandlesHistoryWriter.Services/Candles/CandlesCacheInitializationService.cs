@@ -157,7 +157,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 .Handle<Exception>()
                 .WaitAndRetryAsync(_cacheCandlesAssetsRetryCount,
                     x => TimeSpan.FromSeconds(Math.Pow(2, x - 1)),
-                    (exception, _) => _log.LogInformation($"Caching {productId} candles history: retry."));
+                    (exception, span) => _log.LogInformation($"Caching {productId} candles history failed. Reason: {exception.Message}. Retry in {span.TotalSeconds} seconds."));
         }
     }
 }
