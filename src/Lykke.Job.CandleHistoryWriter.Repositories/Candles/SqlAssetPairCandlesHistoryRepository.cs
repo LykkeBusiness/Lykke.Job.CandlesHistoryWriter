@@ -94,13 +94,17 @@ CREATE TABLE {0}(
                 try
                 {
                     var timestamp = _systemClock.UtcNow.UtcDateTime;
-                    var sql = $"IF EXISTS (SELECT * FROM {_tableName}" +
-                              $" WHERE PriceType=@PriceType AND TimeStamp=@TimeStamp AND TimeInterval=@TimeInterval)" +
-                              $" BEGIN UPDATE {_tableName}  SET [Open]=@Open, [Close]=@Close, [High]=@High, [Low]=@Low, [TradingVolume]=@TradingVolume, [TradingOppositeVolume]=@TradingOppositeVolume, [LastTradePrice]=@LastTradePrice, [LastUpdateTimestamp]='{timestamp}'" +
-                              $" WHERE  PriceType=@PriceType AND TimeStamp=@TimeStamp AND TimeInterval=@TimeInterval END" +
-                              " ELSE " +
-                              $" BEGIN INSERT INTO {_tableName} ({GetColumns}) values ({GetFields}) END";
-
+                    var sql = $@"
+MERGE {_tableName} WITH (HOLDLOCK) AS target
+USING (VALUES(@Open, @Close, @High, @Low, @TradingVolume, @TradingOppositeVolume, @LastTradePrice))
+    AS SOURCE ([Open], [Close], [High], [Low], [TradingVolume], [TradingOppositeVolume], [LastTradePrice])
+    ON target.PriceType=@PriceType AND target.TimeStamp=@TimeStamp AND target.TimeInterval=@TimeInterval
+WHEN MATCHED THEN
+    UPDATE
+	SET [Open]=@Open, [Close]=@Close, [High]=@High, [Low]=@Low, [TradingVolume]=@TradingVolume, [TradingOppositeVolume]=@TradingOppositeVolume, [LastTradePrice]=@LastTradePrice, [LastUpdateTimestamp]='{timestamp}'
+WHEN NOT MATCHED THEN
+	INSERT ({GetColumns}) values ({GetFields});
+";
                     await conn.ExecuteAsync(sql, candles, transaction, commandTimeout: WriteCommandTimeout);
 
                     transaction.Commit();
