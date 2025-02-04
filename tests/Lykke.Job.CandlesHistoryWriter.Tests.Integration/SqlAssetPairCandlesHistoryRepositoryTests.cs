@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using DotNet.Testcontainers.Builders;
+using FluentAssertions;
 using Lykke.Job.CandleHistoryWriter.Repositories.Candles;
 using Lykke.Job.CandleHistoryWriter.Repositories.Snapshots;
 using Lykke.Job.CandlesHistoryWriter.Core.Domain.Candles;
 using Lykke.Job.CandlesProducer.Contract;
 using Microsoft.Data.SqlClient;
 using Moq;
-using Shouldly;
 using Testcontainers.MsSql;
 using Xunit;
 using Xunit.Abstractions;
@@ -98,18 +98,18 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
             var candles = await _repo.GetCandlesAsync(CandlePriceType.Ask, CandleTimeInterval.Minute, now.AddSeconds(-1), now.AddSeconds(1));
 
             var candle = candles.Single();
-            candle.AssetPairId.ShouldBe(AssetName);
-            candle.PriceType.ShouldBe(CandlePriceType.Ask);
-            candle.TimeInterval.ShouldBe(CandleTimeInterval.Minute);
-            candle.Timestamp.ShouldBe(now);
-            candle.Open.ShouldBe(0.5);
-            candle.Close.ShouldBe(0.7);
-            candle.High.ShouldBe(1);
-            candle.Low.ShouldBe(0.2);
-            candle.TradingVolume.ShouldBe(25);
-            candle.LastUpdateTimestamp.ShouldBe(now);
-            candle.LastTradePrice.ShouldBe(0.6);
-            candle.TradingOppositeVolume.ShouldBe(51);
+            candle.AssetPairId.Should().Be(AssetName);
+            candle.PriceType.Should().Be(CandlePriceType.Ask);
+            candle.TimeInterval.Should().Be(CandleTimeInterval.Minute);
+            candle.Timestamp.Should().Be(now);
+            candle.Open.Should().Be(0.5);
+            candle.Close.Should().Be(0.7);
+            candle.High.Should().Be(1);
+            candle.Low.Should().Be(0.2);
+            candle.TradingVolume.Should().Be(25);
+            candle.LastUpdateTimestamp.Should().Be(now);
+            candle.LastTradePrice.Should().Be(0.6);
+            candle.TradingOppositeVolume.Should().Be(51);
         }
         
         
@@ -138,7 +138,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
 
             var candles = await _repo.GetCandlesAsync(CandlePriceType.Ask, CandleTimeInterval.Minute, now.AddSeconds(-1), now.AddSeconds(1));
                 
-            candles.Count().ShouldBe(1);
+            candles.Count().Should().Be(1);
             // exception is suppressed, so analyzing error logs
             _log.Verify(x => x.WriteErrorAsync(nameof(SqlAssetPairCandlesHistoryRepository), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Exception>(), null), Times.Never);
         }
@@ -188,7 +188,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
 
                 var candles = await _repo.GetCandlesAsync(CandlePriceType.Ask, CandleTimeInterval.Minute, now.AddSeconds(-1), now.AddSeconds(1));
                 
-                candles.Count().ShouldBe(1);
+                candles.Count().Should().Be(1);
                 // exception is suppressed, so analyzing error logs
                 _log.Verify(x => x.WriteErrorAsync(nameof(SqlAssetPairCandlesHistoryRepository), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Exception>(), null), Times.Never);
             }
