@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -30,24 +31,20 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests.Integration
         private SqlAssetPairCandlesHistoryRepository _repo;
         private readonly MsSqlContainer _msSqlContainer;
         private Mock<ILog> _log;
-        private ITestOutputHelper _testOutputHelper;
+        private readonly ITestOutputHelper _testOutputHelper;
 
         public SqlAssetPairCandlesHistoryRepositoryTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
-            _msSqlContainer = new MsSqlBuilder()
-                .WithImage("rapidfort/microsoft-sql-server-2019-ib")
+            MsSqlBuilder builder = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? new MsSqlBuilder()
+                    .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+                : new MsSqlBuilder()
+                    .WithImage("rapidfort/microsoft-sql-server-2019-ib")
+                    .WithWaitStrategy(Wait.ForUnixContainer().UntilCommandIsCompleted("/opt/mssql-tools/bin/sqlcmd", "-C", "-Q", "SELECT 1;"));
+            _msSqlContainer = builder
                 .WithEnvironment("ACCEPT_EULA", "Y")
                 .WithPortBinding(1433, true)
-                .WithWaitStrategy(
-                    Wait.ForUnixContainer()
-                        .UntilCommandIsCompleted(
-                            "/opt/mssql-tools/bin/sqlcmd",
-                            "-C",
-                            "-Q",
-                            "SELECT 1;"
-                        )
-                )
                 .Build();
         }
         
