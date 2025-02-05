@@ -8,6 +8,7 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.2" />
     <PackageVersion Include="Dapper" Version="2.0.123" />
+    <PackageVersion Include="FluentAssertions" Version="7.1.0" />
     <PackageVersion Include="Lykke.AzureStorage" Version="8.13.4" />
     <PackageVersion Include="Lykke.Job.CandlesProducer.Contract" Version="6.0.0" />
     <PackageVersion Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="3.0.0" />
@@ -21,7 +22,7 @@
     <PackageVersion Include="LykkeBiz.HttpClientGenerator" Version="7.0.0" />
     <PackageVersion Include="LykkeBiz.Logs.MsSql" Version="4.0.0" />
     <PackageVersion Include="LykkeBiz.Logs.Serilog" Version="3.3.3" />
-    <PackageVersion Include="LykkeBiz.RabbitMqBroker" Version="16.0.0" />
+    <PackageVersion Include="LykkeBiz.RabbitMqBroker" Version="16.2.1" />
     <PackageVersion Include="LykkeBiz.SettingsReader" Version="9.2.0" />
     <PackageVersion Include="LykkeBiz.Snow.Cqrs" Version="7.0.1" />
     <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
@@ -32,7 +33,6 @@
     <PackageVersion Include="MSTest.TestAdapter" Version="3.6.0" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.6.0" />
     <PackageVersion Include="Polly" Version="7.2.3" />
-    <PackageVersion Include="Shouldly" Version="4.2.1" />
     <PackageVersion Include="StackExchange.Redis" Version="2.6.66" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageVersion Include="System.Runtime.Extensions" Version="4.3.1" />

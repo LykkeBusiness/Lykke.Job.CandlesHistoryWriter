@@ -12,6 +12,7 @@ using Lykke.Job.CandlesHistoryWriter.Core.Services.Candles;
 using Microsoft.Extensions.Logging;
 using MoreLinq;
 using Polly;
+using Lykke.Job.CandlesHistoryWriter.Core;
 
 namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
 {
@@ -43,8 +44,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             ICandlesHistoryRepository candlesHistoryRepository,
             ICandlesAmountManager candlesAmountManager,
             ICandlesShardValidator candlesShardValidator,
-            int? configuredCacheCandlesAssetsBatchSize,
-            int? configuredCacheCandlesAssetsRetryCount)
+            CachingSettings cachingSettings)
         {
             _log = log;
             _assetPairsManager = assetPairsManager;
@@ -53,8 +53,8 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             _candlesHistoryRepository = candlesHistoryRepository;
             _candlesAmountManager = candlesAmountManager;
             _candlesShardValidator = candlesShardValidator;
-            _cacheCandlesAssetsBatchSize = GetSafePositiveValue(configuredCacheCandlesAssetsBatchSize, DefaultCacheCandlesAssetsBatchSize);
-            _cacheCandlesAssetsRetryCount = GetSafePositiveValue(configuredCacheCandlesAssetsRetryCount, DefaultCacheCandlesAssetsRetryCount);
+            _cacheCandlesAssetsBatchSize = cachingSettings.CacheCandlesAssetsBatchSize.GetPositiveValueOrDefault(DefaultCacheCandlesAssetsBatchSize);
+            _cacheCandlesAssetsRetryCount = cachingSettings.CacheCandlesAssetsRetryCount.GetPositiveValueOrDefault(DefaultCacheCandlesAssetsRetryCount);
 
             if (_cacheCandlesAssetsBatchSize <= 10)
             {
@@ -65,30 +65,21 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 );
             }
 
-            if (_cacheCandlesAssetsBatchSize != configuredCacheCandlesAssetsBatchSize)
+            if (_cacheCandlesAssetsBatchSize != cachingSettings.CacheCandlesAssetsBatchSize)
             {
                 _log.LogWarning(
-                    $@"Configured cache candles assets batch size `{configuredCacheCandlesAssetsBatchSize}` is invalid.
+                    $@"Configured cache candles assets batch size `{cachingSettings.CacheCandlesAssetsBatchSize}` is invalid.
                     Using default value `{_cacheCandlesAssetsBatchSize}` instead."
                 );
             }
-            
-            if (_cacheCandlesAssetsRetryCount != configuredCacheCandlesAssetsRetryCount)
+
+            if (_cacheCandlesAssetsRetryCount != cachingSettings.CacheCandlesAssetsRetryCount)
             {
                 _log.LogWarning(
-                    $@"Configured cache candles assets retry count `{configuredCacheCandlesAssetsRetryCount}` is invalid.
+                    $@"Configured cache candles assets retry count `{cachingSettings.CacheCandlesAssetsRetryCount}` is invalid.
                     Using default value `{_cacheCandlesAssetsRetryCount}` instead."
                 );
             }
-        }
-
-        private static int GetSafePositiveValue(int? value, int defaultValue)
-        {
-            return value.HasValue
-                ? value.Value <= 0
-                    ? defaultValue
-                    : value.Value
-                : defaultValue;
         }
 
         public async Task InitializeCacheAsync()
@@ -102,7 +93,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             {
                 await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair.Id, now)));
             }
-            
+
             _log.LogInformation("Candles history caching is finished.");
         }
 
@@ -123,9 +114,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             }
 
             _log.LogInformation($"Caching {productId} candles history...");
-            
+
             var policy = CreateRetryPolicy(productId);
-            
+
             try
             {
                 foreach (var priceType in Constants.StoredPriceTypes)
@@ -136,7 +127,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                         var candlesAmountToStore = _candlesAmountManager.GetCandlesAmountToStore(timeInterval);
                         var candles = await _candlesHistoryRepository.GetLastCandlesAsync(productId, timeInterval, priceType, alignedToDate, candlesAmountToStore);
                         await policy.ExecuteAsync(async () => await _candlesCacheService.InitializeAsync(productId, priceType, timeInterval, candles.ToArray()));
-                        
+
                         _log.LogInformation($"{productId} candles history caching finished for interval `{timeInterval}` and price type `{priceType}`");
                     }
                 }
@@ -145,7 +136,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             {
                 var error = $"Couldn't cache candles history for asset pair [{productId}] after {_cacheCandlesAssetsRetryCount} retries. Restart required." + Environment.NewLine +
                               "Increase number of attempts in config if you see this second time. Every attempt increases wait time exponentially on a base of 2.";
-                
+
                 _log.LogError(error, e);
                 throw new AggregateException(error, e);
             }
@@ -159,5 +150,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                     x => TimeSpan.FromSeconds(Math.Pow(2, x - 1)),
                     (exception, span) => _log.LogInformation($"Caching {productId} candles history failed. Reason: {exception.Message}. Retry in {span.TotalSeconds} seconds."));
         }
+    }
+
+    public record CachingSettings(int? CacheCandlesAssetsBatchSize, int? CacheCandlesAssetsRetryCount)
+    {
     }
 }
