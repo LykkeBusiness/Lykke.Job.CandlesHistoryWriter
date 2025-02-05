@@ -86,8 +86,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 _historyRepositoryMock.Object,
                 _candlesAmountManagerMock.Object,
                 _candlesShardValidator.Object,
-                null,
-                null);
+                new CachingSettings(null, null));
         }
 
         [TestMethod]
@@ -195,8 +194,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Tests
                 _historyRepositoryMock.Object,
                 _candlesAmountManagerMock.Object,
                 _candlesShardValidator.Object,
-                null,
-                configuredCacheCandlesAssetsRetryCount: 1);
+                new CachingSettings(null, 1));
             
             // Act
             // Assert
