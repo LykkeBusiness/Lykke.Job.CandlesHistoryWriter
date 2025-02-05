@@ -174,6 +174,8 @@ namespace Lykke.Job.CandlesHistoryWriter
             {
                 ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
 
+                StartApplication(appLifetime).GetAwaiter().GetResult();
+
                 if (env.IsDevelopment())
                 {
                     app.UseDeveloperExceptionPage();
@@ -193,7 +195,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                         swagger.Servers =
                             new List<OpenApiServer>
                             {
-                                new OpenApiServer
+                                new()
                                 {
                                     Url = $"{httpReq.Scheme}://{httpReq.Host.Value}"
                                 }
@@ -204,8 +206,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                     x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
                 });
                 app.UseStaticFiles();
-
-                appLifetime.ApplicationStarted.Register(() => StartApplication(appLifetime).GetAwaiter().GetResult());
+                
                 appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
                 appLifetime.ApplicationStopped.Register(() => CleanUp().GetAwaiter().GetResult());
             }
