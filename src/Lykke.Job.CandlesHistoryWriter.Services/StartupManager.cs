@@ -68,21 +68,14 @@ namespace Lykke.Job.CandlesHistoryWriter.Services
         {
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Deserializing persistence queue async...");
 
-            var tasks = new List<Task>
-            {
-                _snapshotSerializer.DeserializeAsync(_persistenceQueue, _persistenceQueueSnapshotRepository)
-            };
+            await _snapshotSerializer.DeserializeAsync(_persistenceQueue, _persistenceQueueSnapshotRepository);
 
             if (!_migrationEnabled)
             {
                 await _log.WriteInfoAsync(nameof(StartAsync), "", "Initializing cache from the history async...");
 
-                tasks.Add(_cacheInitalizationService.InitializeCacheAsync());
+                await _cacheInitalizationService.InitializeCacheAsync();
             }
-
-            await _log.WriteInfoAsync(nameof(StartAsync), "", "Waiting for async tasks...");
-
-            await Task.WhenAll(tasks);
 
             await _log.WriteInfoAsync(nameof(StartAsync), "", "Starting cache truncator...");
 

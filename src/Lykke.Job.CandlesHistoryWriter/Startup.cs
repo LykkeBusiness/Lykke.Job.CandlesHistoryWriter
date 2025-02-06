@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Net;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -37,6 +39,7 @@ using MarginTrading.AssetService.Contracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.AspNetCore.Http;
 
 namespace Lykke.Job.CandlesHistoryWriter
 {
@@ -179,8 +182,19 @@ namespace Lykke.Job.CandlesHistoryWriter
                     app.UseDeveloperExceptionPage();
                 }
 
-                app.UseLykkeMiddleware(nameof(Startup), ex => ErrorResponse.Create("Technical problem"), false, false);
+                var allowApiInvocation = false;
+                app.Use(async (context, next) =>
+                {
+                    if (allowApiInvocation)
+                        await next(context);
+                    
+                    context.Response.Clear();
+                    context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    await context.Response.WriteAsync("Initializing...");
+                });
 
+                app.UseLykkeMiddleware(nameof(Startup), ex => ErrorResponse.Create("Technical problem"), false, false);
+                
                 app.UseRouting();
                 app.UseEndpoints(endpoints =>
                 {
@@ -193,7 +207,7 @@ namespace Lykke.Job.CandlesHistoryWriter
                         swagger.Servers =
                             new List<OpenApiServer>
                             {
-                                new OpenApiServer
+                                new()
                                 {
                                     Url = $"{httpReq.Scheme}://{httpReq.Host.Value}"
                                 }
@@ -205,7 +219,11 @@ namespace Lykke.Job.CandlesHistoryWriter
                 });
                 app.UseStaticFiles();
 
-                appLifetime.ApplicationStarted.Register(() => StartApplication(appLifetime).GetAwaiter().GetResult());
+                appLifetime.ApplicationStarted.Register(() =>
+                {
+                    StartApplication(appLifetime).GetAwaiter().GetResult();
+                    allowApiInvocation = true;
+                });
                 appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
                 appLifetime.ApplicationStopped.Register(() => CleanUp().GetAwaiter().GetResult());
             }
