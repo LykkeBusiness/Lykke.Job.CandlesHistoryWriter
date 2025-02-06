@@ -89,9 +89,13 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             var assetPairs = await _assetPairsManager.GetAllEnabledAsync();
             var now = _clock.UtcNow;
 
-            foreach (var cacheAssetPairBatch in assetPairs.Batch(_cacheCandlesAssetsBatchSize))
+            decimal k = 1;
+            var pairs = assetPairs.ToList();
+            foreach (var cacheAssetPairBatch in pairs.Batch(_cacheCandlesAssetsBatchSize))
             {
                 await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair.Id, now)));
+                
+                _log.LogInformation($"Caching candles history: {100 - (pairs.Count - k++ * _cacheCandlesAssetsBatchSize) / pairs.Count * 100:f2}% complete..");
             }
 
             _log.LogInformation("Candles history caching is finished.");
@@ -113,7 +117,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                 return;
             }
 
-            _log.LogInformation($"Caching {productId} candles history...");
+            _log.LogTrace($"Caching {productId} candles history...");
 
             var policy = CreateRetryPolicy(productId);
 
@@ -128,7 +132,7 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
                         var candles = await _candlesHistoryRepository.GetLastCandlesAsync(productId, timeInterval, priceType, alignedToDate, candlesAmountToStore);
                         await policy.ExecuteAsync(async () => await _candlesCacheService.InitializeAsync(productId, priceType, timeInterval, candles.ToArray()));
 
-                        _log.LogInformation($"{productId} candles history caching finished for interval `{timeInterval}` and price type `{priceType}`");
+                        _log.LogTrace($"{productId} candles history caching finished for interval `{timeInterval}` and price type `{priceType}`");
                     }
                 }
             }
