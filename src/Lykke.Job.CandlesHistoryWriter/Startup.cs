@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -172,18 +173,24 @@ namespace Lykke.Job.CandlesHistoryWriter
         {
             try
             {
-                ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
+                app.UseRouting();
 
-                StartApplication(appLifetime).GetAwaiter().GetResult();
+                ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
 
                 if (env.IsDevelopment())
                 {
                     app.UseDeveloperExceptionPage();
                 }
 
+                var allowApiInvocation = false;
+                app.Use(async (context, next) =>
+                {
+                    if (allowApiInvocation)
+                        await next(context);
+                });
+
                 app.UseLykkeMiddleware(nameof(Startup), ex => ErrorResponse.Create("Technical problem"), false, false);
 
-                app.UseRouting();
                 app.UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
@@ -206,7 +213,12 @@ namespace Lykke.Job.CandlesHistoryWriter
                     x.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
                 });
                 app.UseStaticFiles();
-                
+
+                appLifetime.ApplicationStarted.Register(() =>
+                {
+                    StartApplication(appLifetime).GetAwaiter().GetResult();
+                    allowApiInvocation = true;
+                });
                 appLifetime.ApplicationStopping.Register(() => StopApplication().GetAwaiter().GetResult());
                 appLifetime.ApplicationStopped.Register(() => CleanUp().GetAwaiter().GetResult());
             }
