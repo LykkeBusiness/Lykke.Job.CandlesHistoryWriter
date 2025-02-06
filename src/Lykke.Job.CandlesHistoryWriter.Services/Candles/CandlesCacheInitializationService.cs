@@ -93,9 +93,9 @@ namespace Lykke.Job.CandlesHistoryWriter.Services.Candles
             var pairs = assetPairs.ToList();
             foreach (var cacheAssetPairBatch in pairs.Batch(_cacheCandlesAssetsBatchSize))
             {
-                await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair.Id, now)));
+                // await Task.WhenAll(cacheAssetPairBatch.Select(assetPair => CacheAssetPairCandlesAsync(assetPair.Id, now)));
                 
-                _log.LogInformation($"Caching candles history: {100 - (pairs.Count - k++ * _cacheCandlesAssetsBatchSize) / pairs.Count * 100:f2}% complete..");
+                _log.LogInformation($"Caching candles history: {Math.Min(100, 100 - (pairs.Count - k++ * _cacheCandlesAssetsBatchSize) / pairs.Count * 100):f2)}% complete..");
             }
 
             _log.LogInformation("Candles history caching is finished.");
