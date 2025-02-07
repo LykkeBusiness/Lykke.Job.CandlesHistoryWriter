@@ -186,11 +186,15 @@ namespace Lykke.Job.CandlesHistoryWriter
                 app.Use(async (context, next) =>
                 {
                     if (allowApiInvocation)
+                    {
                         await next(context);
-                    
-                    context.Response.Clear();
-                    context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                    await context.Response.WriteAsync("Initializing...");
+                    }
+                    else
+                    {
+                        context.Response.Clear();
+                        context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                        await context.Response.WriteAsync("Initializing...");
+                    }
                 });
 
                 app.UseLykkeMiddleware(nameof(Startup), ex => ErrorResponse.Create("Technical problem"), false, false);
