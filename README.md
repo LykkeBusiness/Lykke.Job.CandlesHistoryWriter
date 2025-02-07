@@ -31,6 +31,7 @@ Settings schema is:
       "ExpirationPeriod": "DateTime"
     },
     "CacheCandlesAssetsBatchSize": "Integer",
+    "CacheCandlesAssetsRetryCount": "Integer",
     "CacheCleanUpPeriod": "DateTime",
     "CleanupSettings": {
       "Enabled": "Boolean",
