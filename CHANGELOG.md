@@ -1,3 +1,61 @@
+## 2.15.0 - Nova 2. Delivery 49 (February 07, 2025)
+### What's changed
+* LT-6007: Update rabbitmqbroker in candles writer.
+* LT-5965: History candles missing after restart of the platform.
+* LT-5564: - candles history candle insertion (part2).
+
+### Deployment
+
+#### 1. Readiness Probe Configuration
+
+- **Important:** Do not rely solely on the `/api/isalive` endpoint for your orchestrator’s readiness probe. During service initialization—which can take several minutes—this endpoint (like all other Swagger endpoints) may return a **503 Service Unavailable** status.
+
+- **Recommended Approach:**  
+  Use a TCP check on port **5000** instead. For example, you can verify connectivity using the following command:
+  
+  ```bash
+  telnet <CANDLE.HISTORY.WRITER.IP> 5000
+  ```
+  
+  If you must use the `/api/isalive` endpoint, ensure that your orchestrator is configured with a sufficiently long timeout to accommodate the initialization period.
+
+---
+
+#### 2. Retry Settings (Optional)
+
+- **Parameter Introduction:**  
+  A new optional setting, `CacheCandlesAssetsRetryCount`, has been added under the MtCandlesHistoryWriter configuration. This parameter defaults to **8**, which should be more than adequate for retrying a failed chunk after all other chunks have been processed.
+
+- **Retry Mechanism:**  
+  The retry intervals are calculated using the formula:  
+    $$
+    \text{Retry Interval} = 2^k + 5 \times k \quad \text{seconds}
+    $$
+  where **5 seconds** represents the Redis timeout and **k** ranges from **0** to `(CacheCandlesAssetsRetryCount - 1)`.  
+  For instance, with the default setting, the intervals would be:  
+  - k = 0: 2⁰ + 5×0 = 1 second  
+  - k = 1: 2¹ + 5×1 = 7 seconds  
+  - k = 2: 2² + 5×2 = 14 seconds  
+  - … and so on.
+
+- **Future Adjustments:**  
+  The retry count may be increased in future releases if there is an increase in the number of assets or if the operations team observes restart failures.
+
+- **Example Configuration:**  
+  Here is an example snippet from the settings service:
+  
+  ```json
+  "MtCandlesHistoryWriter": {
+      ...
+      "CacheCandlesAssetsRetryCount": 8
+  }
+  ```
+
+---
+
+Please ensure that these guidelines are followed during deployment to maintain reliable service initialization and appropriate error recovery behavior.
+
+
 ## 2.13.1 - Nova 2. Delivery 47. Hotfix 2 (January 16, 2025)
 ### What's changed
 * LT-5991: Bump LykkeBiz.RabbitMqBroker to 8.11.1
